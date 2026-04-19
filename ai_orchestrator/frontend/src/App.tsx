@@ -1522,11 +1522,8 @@ const [dbTasks, setDbTasks] = useState<any[]>([]);
                   </div>
                   <div className="divide-y divide-white/5 max-h-80 overflow-y-auto">
                     {botFeed.filter((msg, i, arr) => {
-                      // показываем только последнее сообщение от каждого отправителя по каждому типу
-                      const lastIdx = arr.map((m, j) => ({ m, j }))
-                        .filter(({ m }) => m.sender === msg.sender && m.parsed_type === msg.parsed_type)
-                        .slice(-1)[0]?.j;
-                      return i === lastIdx;
+                      // одно сообщение на отправителя — последнее
+                      return arr.findIndex(m => m.sender === msg.sender) === i;
                     }).map((msg, i) => {
                       const typeColors: Record<string,string> = {
                         food: 'bg-emerald-50 text-emerald-700 border-emerald-100',
@@ -1770,10 +1767,9 @@ const [dbTasks, setDbTasks] = useState<any[]>([]);
                       const spontaneous = [...botFeed]
                         .reverse()
                         .filter((m: any) => ['food', 'absence', 'medical', 'incident'].includes(m.parsed_type))
-                        .filter((m: any, i: number, arr: any[]) => {
-                          const key = `${m.sender}__${m.parsed_type}`;
-                          return arr.findIndex((x: any) => `${x.sender}__${x.parsed_type}` === key) === i;
-                        });
+                        .filter((m: any, i: number, arr: any[]) =>
+                          arr.findIndex((x: any) => x.sender === m.sender) === i
+                        );
                       const typeConfig: Record<string, {color: string, label: string}> = {
                         food:     { color: 'bg-amber-100 text-amber-700',   label: '🍽 Питание' },
                         absence:  { color: 'bg-rose-100 text-rose-700',     label: '🤒 Отсутствие' },

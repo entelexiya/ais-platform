@@ -22,6 +22,7 @@ _app_dir = os.path.dirname(_api_dir)
 _backend_dir = os.path.dirname(_app_dir)
 DB_PATH = os.path.join(_backend_dir, "orchestrator.db")
 WHATSAPP_AUTO_REPLY_ENABLED = os.getenv("WHATSAPP_AUTO_REPLY_ENABLED", "false").strip().lower() in {"1", "true", "yes", "on"}
+SOURCE_CHAT_ID = os.getenv("SOURCE_CHAT_ID", os.getenv("ALLOWED_CHAT_ID", "")).strip()
 
 
 
@@ -225,6 +226,12 @@ def get_whatsapp_auth_status():
 def whatsapp_webhook(req: WhatsAppWebhookReq):
     """Принимает сообщения от реального WhatsApp и вставляет в ту же базу."""
     _ensure_table()
+
+    # Принимаем только из разрешённой группы-источника
+    if SOURCE_CHAT_ID and req.chatId and req.chatId.strip() != SOURCE_CHAT_ID:
+        print(f"[Filter] Игнорируем чат {req.chatId} — не источник ({SOURCE_CHAT_ID})")
+        return {"status": "ignored", "reason": "wrong_chat"}
+
     parsed = parse_with_llm(req.text, sender=req.sender)
 
     # Фильтр: нерелевантные сообщения не попадают на дашборд
@@ -498,18 +505,18 @@ def whatsapp_webhook(req: WhatsAppWebhookReq):
 
 @router.get("/messages")
 def get_bot_messages(limit: int = 50):
-    """Последние сообщения от учителей — дедупликация по (sender, parsed_type)."""
+    """Последние сообщения от учителей — одно на отправителя (последнее)."""
     _ensure_table()
     try:
         conn = _get_conn()
-        # Берём последнее сообщение от каждого отправителя по каждому типу
+        # Берём последнее сообщение от каждого отправителя (один раз)
         rows = conn.execute(
             """SELECT id, sender, text, parsed_type, parsed_summary, food_class, food_count,
                       created_at, parsed_confidence, parsed_payload, review_status
                FROM tg_messages
                WHERE id IN (
                    SELECT MAX(id) FROM tg_messages
-                   GROUP BY sender, parsed_type
+                   GROUP BY sender
                )
                ORDER BY id DESC LIMIT ?""",
             (limit,)
