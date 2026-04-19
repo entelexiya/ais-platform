@@ -46,6 +46,36 @@ interface AbsenceEventResponse {
   unresolved: AbsenceResolutionItem[];
 }
 
+interface OpsSummary {
+  totals: {
+    absent_teachers: number;
+    substitutions_found: number;
+    unresolved_slots: number;
+    pending_tasks: number;
+    pending_incidents: number;
+  };
+  absences: Array<{
+    event_id: number;
+    teacher_name: string;
+    day: string;
+    status: string;
+    reason?: string | null;
+    source?: string | null;
+    created_at?: string | null;
+    substitutions_count: number;
+    unresolved_count: number;
+    substitutions_preview: Array<{ lesson_number: number; class_name: string; room: string; subject: string }>;
+    unresolved_preview: Array<{ lesson_number: number; class_name: string; room: string; subject: string }>;
+  }>;
+  pending_tasks: Array<{
+    id: number;
+    title: string;
+    assignee: string;
+    deadline: string;
+    is_accepted: boolean;
+  }>;
+}
+
 const BrandIcon = ({ className = "w-full h-full" }: { className?: string }) => (
   <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
     <rect width="40" height="40" rx="10" fill="#c2ef4e" fillOpacity="0.15"/>
@@ -126,7 +156,7 @@ function HomeScreen({ onStart }: { onStart: () => void }) {
 
           <div className="relative group">
             {/* Decorative Grid UI */}
-            <div className="relative bg-[#2a1f42] border border-white/10 rounded-3xl p-10 shadow-[0_50px_100px_rgba(0,0,0,0.3)] space-y-8 transform rotate-2 hover:rotate-0 transition-all duration-700 group overflow-hidden">
+            <div className="relative bg-white/6 backdrop-blur-xl border border-white/12 rounded-3xl p-10 shadow-[0_50px_100px_rgba(0,0,0,0.3)] space-y-8 transform rotate-2 hover:rotate-0 transition-all duration-700 group overflow-hidden">
               <div className="absolute -top-20 -right-20 w-64 h-64 bg-[#c2ef4e]/5 rounded-full blur-[100px]"></div>
               
               <div className="space-y-8 relative z-10">
@@ -155,7 +185,7 @@ function HomeScreen({ onStart }: { onStart: () => void }) {
                     <span className="text-[10px] font-bold text-white/30 uppercase">Just now</span>
                   </div>
                   <p className="text-base text-white/70 font-medium leading-relaxed">
-                    Обработано 8 чатов из Telegram. Создано 2 поручения. Подобрана замена для Болата автоматически.
+                    Обработано 8 сообщений из рабочих чатов. Создано 3 поручения. Подобрана замена для одного урока автоматически.
                   </p>
                 </div>
 
@@ -215,7 +245,7 @@ function AuthScreen({ onLogin }: { onLogin: (role: string) => void }) {
       <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-purple-900/30 rounded-full filter blur-[120px]"></div>
       <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-[#c2ef4e]/5 rounded-full filter blur-[120px]"></div>
 
-      <div className="bg-[#2a1f42] p-10 rounded-2xl shadow-[0_30px_60px_rgba(0,0,0,0.4)] border border-white/10 w-full max-w-md z-10">
+      <div className="bg-white/8 backdrop-blur-2xl p-10 rounded-2xl shadow-[0_30px_60px_rgba(0,0,0,0.4)] border border-white/15 w-full max-w-md z-10">
         <div className="flex flex-col items-center mb-6">
           <div className="w-12 h-12 mb-4 p-1.5">
             <BrandIcon className="w-full h-full" />
@@ -314,7 +344,7 @@ function TeacherProfileDashboard({ onLogout }: { onLogout: () => void }) {
              </div>
              Мое расписание (Понедельник)
           </h2>
-          <div className="bg-[#2a1f42] rounded-2xl overflow-hidden border border-white/10">
+          <div className="bg-white/5 backdrop-blur-md rounded-2xl overflow-hidden border border-white/10">
             {profile.schedule.length === 0 && <div className="p-5 text-white/60">Нет уроков на сегодня.</div>}
             {profile.schedule.map((item: any, i: number) => (
                <div key={i} className="p-5 flex items-center border-b border-slate-50 hover:bg-white/5 transition cursor-pointer">
@@ -340,7 +370,7 @@ function TeacherProfileDashboard({ onLogout }: { onLogout: () => void }) {
              </div>
              Задачи
           </h2>
-          <div className="bg-[#2a1f42] p-6 rounded-2xl border border-white/10 flex items-start space-x-5 hover:border-rose-500/30 transition cursor-pointer group">
+          <div className="bg-white/5 backdrop-blur-xl p-6 rounded-2xl border border-white/8 flex items-start space-x-5 hover:border-rose-500/30 hover:bg-white/8 transition-all cursor-pointer group">
             <div className="w-12 h-12 bg-rose-500/10 rounded-2xl flex items-center justify-center text-rose-400 shrink-0 group-hover:scale-110 group-hover:bg-rose-500 group-hover:text-white transition-all">
                <FileText size={22} strokeWidth={2.5} />
             </div>
@@ -403,7 +433,7 @@ function TeacherScreen({ onBack }: { onBack: () => void }) {
     <div className="min-h-screen flex flex-col items-center justify-center bg-[#1f1633] text-white text-center p-6 relative overflow-hidden font-sans">
        <div className="absolute inset-0 opacity-10 bg-[url('https://w0.peakpx.com/wallpaper/818/148/HD-wallpaper-whatsapp-background-solid-color-thumbnail.jpg')] bg-cover mix-blend-multiply pointer-events-none z-0"></div>
        
-       <div className="z-10 bg-[#2a1f42] p-10 rounded-2xl shadow-2xl border border-white/10 max-w-md w-full flex flex-col items-center">
+       <div className="z-10 bg-[#130a24]/90 backdrop-blur-2xl p-10 rounded-2xl shadow-2xl border border-white/15 max-w-md w-full flex flex-col items-center">
           <div 
             onClick={handleSecretLogin}
             className={`cursor-pointer w-24 h-24 rounded-[2rem] flex items-center justify-center text-white mb-6 shadow-2xl transition-all duration-1000 ${status === 'ready' ? 'bg-gradient-to-br from-[#25D366] to-emerald-500 shadow-emerald-500/40 rotate-[360deg] scale-110' : status === 'syncing' ? 'bg-emerald-400 rotate-180 scale-95 shadow-emerald-400/50' : 'bg-gradient-to-br from-slate-800 to-slate-900 shadow-slate-900/40'}`}>
@@ -421,7 +451,7 @@ function TeacherScreen({ onBack }: { onBack: () => void }) {
           </p>
           
           {status !== 'ready' && (
-            <div className={`p-4 bg-[#2a1f42] rounded-2xl border border-white/10 flex items-center justify-center mb-10 w-56 h-56 transition-all duration-700 ${status === 'syncing' ? 'opacity-50 blur-sm scale-95' : 'hover:scale-[1.02]'} relative group cursor-pointer`}>
+            <div className={`p-4 bg-white/5 backdrop-blur-md rounded-2xl border border-white/10 flex items-center justify-center mb-10 w-56 h-56 transition-all duration-700 ${status === 'syncing' ? 'opacity-50 blur-sm scale-95' : 'hover:scale-[1.02]'} relative group cursor-pointer`}>
                {!qrData || status === 'syncing' ? (
                  <div className="absolute inset-0 flex flex-col items-center justify-center space-y-4">
                    <div className="w-10 h-10 border-[3px] border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin"></div>
@@ -458,7 +488,7 @@ function TaskCard({ task, idx, stage, onMarkDone }: { task: any, idx: number, st
   const initials = task.assignee?.split(' ').map((w: string) => w[0]).join('').slice(0, 2).toUpperCase() || '??';
 
   return (
-    <div className={`group bg-[#1a1330] rounded-xl p-4 border transition-all hover:-translate-y-0.5 cursor-default ${
+    <div className={`group bg-white/4 backdrop-blur-sm rounded-xl p-4 border transition-all hover:-translate-y-0.5 hover:bg-white/7 cursor-default ${
       stage === 'request' ? 'border-amber-500/25 hover:border-amber-500/50' :
       stage === 'progress' ? 'border-blue-500/25 hover:border-blue-500/50' :
       'border-white/6 opacity-55'
@@ -553,17 +583,20 @@ function Dashboard() {
   // Live Telegram feed
   const [botFeed, setBotFeed] = useState<any[]>([]);
   const [svod, setSvod] = useState<any>(null);
+  const [opsSummary, setOpsSummary] = useState<OpsSummary | null>(null);
 
   // Poll Telegram bot messages every 4 seconds
   useEffect(() => {
     const fetchFeed = async () => {
       try {
-        const [feedRes, svodRes] = await Promise.all([
+        const [feedRes, svodRes, opsRes] = await Promise.all([
           axios.get(`${API_BASE}/bot/messages?limit=30`),
           axios.get(`${API_BASE}/bot/svod`),
+          axios.get(`${API_BASE}/bot/ops-summary`),
         ]);
         setBotFeed(feedRes.data);
         setSvod(svodRes.data);
+        setOpsSummary(opsRes.data);
       } catch {}
     };
     fetchFeed();
@@ -590,14 +623,24 @@ function Dashboard() {
   };
 
   const [messages, setMessages] = useState<any[]>([
-    { text: "1В — 23 ребёнка, все присутствуют.", time: "08:10", parsed: { type: "attendance", urgency: "low", insight: "✅ Питание: 23 порции. Данные переданы в столовую Aqbobek." } },
-    { text: "Доброе утро! 2А: 19 человек, 1 заболел.", time: "08:14", parsed: { type: "attendance", urgency: "low", insight: "✅ Питание: 19 порций. Заявка сформирована автоматически." } },
-    { text: "В кабинете 8 сломался проектор, урок провести не можем.", time: "09:10", parsed: { type: "incident", urgency: "high", insight: "🚨 ИНЦИДЕНТ\nСоздана задача Серику (Техработник): Починить проектор в каб. 8" } },
-    { text: "У меня высокая температура. Сегодня не смогу прийти на уроки.", time: "08:50", parsed: { type: "absence", urgency: "critical", insight: "🔥 ВНИМАНИЕ: Болат (Математика) болен.\nНайдены свободные окна: Петрова О. (2 урок), Байжанова Д. (3 урок)." } },
-    { text: "4Б — 24 ученика, 2 отсутствуют. 22 на питание.", time: "08:33", parsed: { type: "attendance", urgency: "low", insight: "✅ Питание: 22 порции. Список отсутствующих: Сарин, Ким." } }
+    { text: "1А — 26 детей, 1 отсутствует. На питание 25.", time: "08:07", parsed: { type: "attendance", urgency: "low", insight: "✅ Столовая: 25 порций подтверждено. Сводка по 1А добавлена в утренний отчёт." } },
+    { text: "2Б: 24 ученика, все на месте.", time: "08:12", parsed: { type: "attendance", urgency: "low", insight: "✅ Посещаемость принята. Для 2Б заявка в столовую сформирована автоматически." } },
+    { text: "В кабинете 205 не включается проектор, нужен техспециалист до третьего урока.", time: "08:41", parsed: { type: "incident", urgency: "high", insight: "🚨 Инцидент: создана задача Ахмету. Локация: кабинет 205. Приоритет: высокий." } },
+    { text: "Айман сегодня не выйдет, температура, прошу поставить замену на мои уроки.", time: "08:48", parsed: { type: "absence", urgency: "critical", insight: "🔥 Отсутствие зафиксировано. Система подбирает замену по предмету и свободным слотам." } },
+    { text: "3В — 21 ребёнок, двое болеют, на питание 19.", time: "08:55", parsed: { type: "attendance", urgency: "low", insight: "✅ Для 3В отправлено 19 порций. Отсутствующие отмечены в журнале посещаемости." } }
   ]);
   
 const [dbTasks, setDbTasks] = useState<any[]>([]);
+
+  useEffect(() => {
+    setMessages([
+      { text: "1А — 26 детей, 1 отсутствует. На питание 25.", time: "08:07", parsed: { type: "attendance", urgency: "low", insight: "✅ Столовая: 25 порций подтверждено. Сводка по 1А добавлена в утренний отчёт." } },
+      { text: "2Б: 24 ученика, все на месте.", time: "08:12", parsed: { type: "attendance", urgency: "low", insight: "✅ Посещаемость принята. Для 2Б заявка в столовую сформирована автоматически." } },
+      { text: "В кабинете 205 не включается проектор, нужен техспециалист до третьего урока.", time: "08:41", parsed: { type: "incident", urgency: "high", insight: "🚨 Инцидент: создана задача Ахмету. Локация: кабинет 205. Приоритет: высокий." } },
+      { text: "Айман сегодня не выйдет, температура, прошу поставить замену на мои уроки.", time: "08:48", parsed: { type: "absence", urgency: "critical", insight: "🔥 Отсутствие зафиксировано. Система подбирает замену по предмету и свободным слотам." } },
+      { text: "3В — 21 ребёнок, двое болеют, на питание 19.", time: "08:55", parsed: { type: "attendance", urgency: "low", insight: "✅ Для 3В отправлено 19 порций. Отсутствующие отмечены в журнале посещаемости." } }
+    ]);
+  }, []);
 
   const [mockSchedule, setMockSchedule] = useState([
     { 
@@ -832,27 +875,27 @@ const [dbTasks, setDbTasks] = useState<any[]>([]);
 
   const DEMO_RESPONSES: Record<string, any> = {
     "Нормы питания №130": {
-      answer: "Согласно Приказу №130, мониторинг качества питания осуществляется ежедневно комиссией в составе медработника, администрации и представителей родительского комитета. Данные о количестве учащихся должны подаваться в столовую не позднее 09:00 текущего дня. Контроль выхода блюд и соответствие меню-раскладке обязателен.",
-      sources: ["Приказ №130 МОН", "СанПиН 2024", "Методические рекомендации"]
+      answer: "Для школьной столовой критично фиксировать актуальное количество детей на питание до начала раздачи, отдельно отмечать льготные категории и хранить ежедневную сводку по классам. Для директора это значит: один источник цифр, подтверждённый до 09:00, и журнал корректировок по отсутствующим.",
+      sources: ["Приказ №130 МОН", "Правила школьного питания", "Внутренний регламент школы"]
     },
     "Приказ №110: Замены": {
-      answer: "Замена временно отсутствующих учителей должна производиться специалистами той же предметной области. При отсутствии возможности — учителями смежных дисциплин. В исключительных случаях допускается проведение занятий администрацией школы. Все замены фиксируются в журнале учета пропущенных и замещенных уроков и оплачиваются согласно фактически отработанным часам.",
-      sources: ["Приказ №110", "Трудовой Кодекс РК", "Инструкция по ведению ЖУПЗ"]
+      answer: "При замене сначала выбирается учитель того же предмета со свободным окном. Если такого нет, рассматривается сотрудник со смежной квалификацией или администрация школы. Любая замена должна быть отражена в расписании, журнале замен и в уведомлениях исполнителю и директору.",
+      sources: ["Приказ №110", "Трудовой кодекс РК", "Локальный регламент по заменам"]
     },
     "Приказ №76: Аттестация": {
-      answer: "Аттестация педагогов проводится один раз в пять лет в соответствии с правилами Приказа №76. Педагоги, подтвердившие категорию «исследователь» или «мастер», получают надбавку в размере 30-50% от БДО. Портфолио должно быть загружено в систему не позднее 2 месяцев до квалификационного экзамена.",
-      sources: ["Приказ №76 МОН", "Закон об образовании", "Правила аттестации"]
+      answer: "Для аттестации важно заранее собрать портфолио, подтверждение курсов, результаты учеников и внутришкольные наблюдения. Практически для директора это означает календарь подготовки по каждому педагогу и отдельный чек-лист по недостающим документам.",
+      sources: ["Приказ №76 МОН", "Правила аттестации", "Внутришкольный план развития педагогов"]
     }
   };
 
   const DEMO_CHECKLISTS: Record<string, any> = {
     "Приказ №130": {
-      answer: "Чек-лист по Приказу №130 (Посещаемость и питание):",
+      answer: "Чек-лист по ежедневной сводке питания и посещаемости:",
       items: [
-        "Подать сведения о посещаемости в систему до 09:00.",
-        "При отсутствии ученика >3 дней: связаться с родителями.",
-        "Составить акт посещения семьи (если причина не уважительная).",
-        "Сдать данные по льготному питанию соцпедагогу до 10:00."
+        "Собрать количество детей на питание по каждому классу до 09:00.",
+        "Проверить несовпадения между посещаемостью и заявкой в столовую.",
+        "Отдельно отметить льготные категории и временно отсутствующих.",
+        "Сохранить итоговую сводку для директора и завстоловой."
       ],
       sources: ["Приказ №130 МОН РК"]
     }
@@ -1148,21 +1191,26 @@ const [dbTasks, setDbTasks] = useState<any[]>([]);
   };
 
   return (
-    <div className="flex h-screen bg-[#1f1633] text-white font-sans tracking-wide overflow-hidden relative">
-      <div className="absolute top-0 right-0 w-1/3 h-1/3 bg-purple-900/20 rounded-full filter blur-[150px] opacity-60 z-0 pointer-events-none"></div>
-      <div className="absolute bottom-0 left-0 w-1/4 h-1/4 bg-[#c2ef4e]/5 rounded-full filter blur-[120px] z-0 pointer-events-none"></div>
+    <div className="flex h-screen bg-[#130d24] text-white font-sans tracking-wide overflow-hidden relative">
+      {/* Background blobs — glass needs something to blur against */}
+      <div className="absolute top-[-5%] right-[-5%] w-[600px] h-[600px] bg-purple-700/30 rounded-full blur-[130px] z-0 pointer-events-none" />
+      <div className="absolute bottom-[-10%] left-[-5%] w-[500px] h-[500px] bg-[#c2ef4e]/8 rounded-full blur-[110px] z-0 pointer-events-none" />
+      <div className="absolute top-[40%] left-[35%] w-[350px] h-[350px] bg-blue-700/18 rounded-full blur-[110px] z-0 pointer-events-none" />
+      <div className="absolute top-[15%] left-[15%] w-[250px] h-[250px] bg-violet-600/12 rounded-full blur-[90px] z-0 pointer-events-none" />
 
       {isSidebarOpen && <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 md:hidden" onClick={() => setIsSidebarOpen(false)}></div>}
-      <div className={`${isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'} fixed md:relative w-[280px] h-full flex flex-col bg-[#16102a] border-r border-white/8 z-50 transition-transform duration-300`}>
+      <div className={`${isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'} fixed md:relative w-[280px] h-full flex flex-col bg-[#16102a]/70 backdrop-blur-2xl border-r border-white/10 z-50 transition-transform duration-300`}>
         <div className="md:hidden absolute top-4 right-4">
            <button onClick={() => setIsSidebarOpen(false)} className="p-2 bg-white/10 rounded-full text-white/60 hover:bg-white/20"><X className="w-5 h-5"/></button>
         </div>
-        <div className="p-6 flex flex-col items-center border-b border-white/8 w-full">
-          <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-3 p-2">
+        <div className="px-5 py-5 flex items-center gap-3 border-b border-white/8 w-full bg-gradient-to-r from-white/3 to-transparent">
+          <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 p-1.5 bg-[#c2ef4e]/10 border border-[#c2ef4e]/20">
             <BrandIcon className="w-full h-full" />
           </div>
-          <div className="font-bold text-base text-white tracking-tight">Aqbobek AI</div>
-          <div className="text-[10px] text-white/30 font-medium mt-0.5 uppercase tracking-widest">Цифровой директор</div>
+          <div>
+            <div className="font-black text-[15px] text-white tracking-tight leading-tight">Aqbobek AI</div>
+            <div className="text-[9px] text-white/30 font-medium uppercase tracking-widest">Цифровой директор</div>
+          </div>
         </div>
 
         <div className="flex-1 overflow-y-auto py-4 px-3 w-full">
@@ -1188,13 +1236,23 @@ const [dbTasks, setDbTasks] = useState<any[]>([]);
             <MenuButton title="База знаний" desc="Приказы МОН №76, №110, №130" icon={<BookOpen />} active={activeTab === 'rag'} onClick={() => setActiveTab('rag')} />
           </div>
         </div>
-        <div className="p-4 border-t border-white/8 w-full">
-          <button onClick={() => { localStorage.removeItem('auth_token'); window.location.reload(); }} className="w-full text-white/30 hover:text-rose-400 hover:bg-rose-500/10 rounded-xl transition font-medium text-sm p-3 text-center">Выйти из системы</button>
+        <div className="p-4 border-t border-white/8 w-full space-y-3">
+          <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/4 border border-white/6">
+            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-[#c2ef4e]/20 to-emerald-500/20 flex items-center justify-center shrink-0">
+              <BrandIcon className="w-4 h-4" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="text-[11px] font-black text-white/70 truncate">Директор</div>
+              <div className="text-[9px] text-white/25 font-medium">Aqbobek AI · активен</div>
+            </div>
+            <span className="relative flex h-1.5 w-1.5 shrink-0"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span><span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span></span>
+          </div>
+          <button onClick={() => { localStorage.removeItem('auth_token'); window.location.reload(); }} className="w-full text-white/25 hover:text-rose-400 hover:bg-rose-500/8 rounded-xl transition font-medium text-xs p-2.5 text-center">Выйти из системы</button>
         </div>
       </div>
 
       <div className="flex-1 flex flex-col relative z-0 min-w-0">
-        <div className="px-4 md:px-8 py-3.5 flex items-center justify-between z-10 sticky top-0 bg-[#1f1633]/95 backdrop-blur-md border-b border-white/8">
+        <div className="px-4 md:px-8 py-3.5 flex items-center justify-between z-10 sticky top-0 bg-white/3 backdrop-blur-xl border-b border-white/8 shadow-sm shadow-black/20">
           <div className="flex items-center gap-3">
             <button
               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
@@ -1254,38 +1312,176 @@ const [dbTasks, setDbTasks] = useState<any[]>([]);
             <div className="max-w-4xl mx-auto flex flex-col space-y-8">
               
               {/* Svod strip */}
-              <div className="flex flex-wrap items-center gap-3 bg-[#2a1f42] border border-white/8 rounded-2xl px-5 py-4">
-                <div className="flex items-center gap-2 text-[#c2ef4e]/60 text-xs font-bold uppercase tracking-widest mr-2">
-                  <Clock className="w-3.5 h-3.5" /> Свод 09:00
-                </div>
-                {[
-                  { label: 'Порций', value: svod?.total_portions > 0 ? svod.total_portions : calculateAttendanceTotals().totalChildren, accent: 'text-[#c2ef4e]' },
-                  { label: 'Отчётов', value: svod?.report_count ?? messages.filter(m => m.text.includes('детей')).length, accent: 'text-blue-300' },
-                  { label: 'Отсутствий', value: svod?.absences_today ?? 0, accent: 'text-rose-300' },
-                  { label: 'Инцидентов', value: svod?.incidents_today ?? 0, accent: 'text-amber-300' },
-                ].map((s, i) => (
-                  <div key={i} className="flex items-center gap-2 bg-white/5 px-4 py-2 rounded-xl border border-white/8">
-                    <span className={`text-xl font-black ${s.accent}`}>{s.value}</span>
-                    <span className="text-[11px] text-white/40 font-semibold">{s.label}</span>
+              <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl overflow-hidden">
+                <div className="flex flex-wrap items-center gap-3 px-5 py-3 border-b border-white/6 bg-gradient-to-r from-[#c2ef4e]/5 to-transparent">
+                  <div className="flex items-center gap-2 text-[#c2ef4e]/70 text-[10px] font-black uppercase tracking-widest">
+                    <span className="relative flex h-1.5 w-1.5"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#c2ef4e] opacity-75"></span><span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-[#c2ef4e]"></span></span>
+                    Утренний свод
                   </div>
-                ))}
-                <button
-                  onClick={async () => {
-                    try {
-                      const r = await axios.post(`${API_BASE}/bot/send-food-report`);
-                      if (r.data.sent) alert(`✅ Отправлено: ${r.data.report.total_portions} порций`);
-                    } catch { alert('Ошибка'); }
-                  }}
-                  className="ml-auto flex items-center gap-1.5 text-[11px] font-bold text-[#c2ef4e] bg-[#c2ef4e]/10 hover:bg-[#c2ef4e]/20 border border-[#c2ef4e]/25 px-4 py-2 rounded-xl transition-all"
-                >
-                  📤 В столовую
-                </button>
+                  <button
+                    onClick={async () => {
+                      try {
+                        const r = await axios.post(`${API_BASE}/bot/send-food-report`);
+                        if (r.data.sent) alert(`✅ Отправлено: ${r.data.report.total_portions} порций`);
+                      } catch { alert('Ошибка'); }
+                    }}
+                    className="ml-auto flex items-center gap-1.5 text-[10px] font-black text-[#c2ef4e] bg-[#c2ef4e]/10 hover:bg-[#c2ef4e]/20 border border-[#c2ef4e]/20 px-3 py-1.5 rounded-lg transition-all active:scale-95"
+                  >
+                    📤 В столовую
+                  </button>
+                </div>
+                <div className="flex flex-wrap gap-px bg-white/5">
+                  {[
+                    { label: 'Порций', value: svod?.total_portions > 0 ? svod.total_portions : calculateAttendanceTotals().totalChildren, accent: 'text-[#c2ef4e]', sub: 'На питание сегодня' },
+                    { label: 'Отчётов', value: svod?.report_count ?? messages.filter(m => m.text.includes('детей')).length, accent: 'text-blue-300', sub: 'Классных сводок' },
+                    { label: 'Отсутствий', value: svod?.absences_today ?? 0, accent: 'text-rose-300', sub: 'Учителей нет' },
+                    { label: 'Инцидентов', value: svod?.incidents_today ?? 0, accent: 'text-amber-300', sub: 'Обработано AI' },
+                  ].map((s, i) => (
+                    <div key={i} className="flex-1 min-w-[100px] bg-[#130d24] px-5 py-4 first:rounded-bl-2xl last:rounded-br-2xl">
+                      <div className={`text-2xl font-black ${s.accent}`}>{s.value}</div>
+                      <div className="text-[10px] text-white/30 font-semibold mt-0.5">{s.sub}</div>
+                    </div>
+                  ))}
+                </div>
               </div>
+
+              {opsSummary && (
+                <div className="bg-white/5 backdrop-blur-xl rounded-[2rem] border border-white/10 shadow-xl overflow-hidden">
+                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 px-6 py-5 border-b border-white/8 bg-gradient-to-r from-violet-500/5 to-transparent">
+                    <div>
+                      <div className="text-[10px] font-black uppercase tracking-widest text-[#c2ef4e]/70 mb-1 flex items-center gap-1.5"><span className="relative flex h-1.5 w-1.5"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#c2ef4e] opacity-75"></span><span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-[#c2ef4e]"></span></span>Live Operations</div>
+                      <div className="text-2xl font-black text-white">Оперативный центр директора</div>
+                      <div className="text-sm text-white/45 mt-1">Отсутствия, замены и активные поручения в одном месте.</div>
+                    </div>
+                    <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                      {[
+                        { label: 'Отсутствуют', value: opsSummary.totals.absent_teachers, accent: 'text-rose-300' },
+                        { label: 'Замены найдены', value: opsSummary.totals.substitutions_found, accent: 'text-emerald-300' },
+                        { label: 'Нужны решения', value: opsSummary.totals.unresolved_slots, accent: 'text-amber-300' },
+                        { label: 'Задачи', value: opsSummary.totals.pending_tasks, accent: 'text-sky-300' },
+                        { label: 'Инциденты', value: opsSummary.totals.pending_incidents, accent: 'text-orange-300' },
+                      ].map((item, idx) => (
+                        <div key={idx} className="bg-white/5 border border-white/8 rounded-2xl px-4 py-3 min-w-[110px]">
+                          <div className={`text-2xl font-black ${item.accent}`}>{item.value}</div>
+                          <div className="text-[11px] text-white/40 font-semibold mt-1">{item.label}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="grid lg:grid-cols-[1.5fr_1fr] gap-6 px-6 py-6">
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div className="text-sm font-black uppercase tracking-widest text-white/40">Сегодня не придут</div>
+                        <button onClick={() => setActiveTab('schedule')} className="text-xs font-bold text-[#c2ef4e] hover:text-[#d7ff75] transition">
+                          Открыть замены →
+                        </button>
+                      </div>
+
+                      {opsSummary.absences.length === 0 ? (
+                        <div className="rounded-2xl border border-white/8 bg-white/5 px-5 py-6 text-white/45 text-sm">
+                          Новых отсутствий пока нет. Как только учитель напишет в WhatsApp, карточка появится здесь автоматически.
+                        </div>
+                      ) : (
+                        <div className="grid gap-4">
+                          {opsSummary.absences.map((absence) => (
+                            <div key={absence.event_id} className="rounded-3xl border border-white/10 bg-white/5 p-5">
+                              <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+                                <div>
+                                  <div className="flex flex-wrap items-center gap-2 mb-2">
+                                    <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-rose-500/10 text-rose-300 border border-rose-400/20">
+                                      {absence.status}
+                                    </span>
+                                    <span className="text-xs font-bold text-white/35">{absence.day}</span>
+                                    {absence.created_at && (
+                                      <span className="text-xs font-bold text-white/25">{absence.created_at.slice(11, 16)}</span>
+                                    )}
+                                  </div>
+                                  <div className="text-2xl font-black text-white">{absence.teacher_name}</div>
+                                  <div className="text-sm text-white/45 mt-1">{absence.reason || 'Причина не указана'} • источник: {absence.source || 'chat'}</div>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-3 min-w-[220px]">
+                                  <div className="rounded-2xl border border-emerald-400/20 bg-emerald-500/10 px-4 py-3">
+                                    <div className="text-xl font-black text-emerald-300">{absence.substitutions_count}</div>
+                                    <div className="text-[11px] font-semibold text-emerald-100/70 mt-1">Замены найдены</div>
+                                  </div>
+                                  <div className="rounded-2xl border border-amber-400/20 bg-amber-500/10 px-4 py-3">
+                                    <div className="text-xl font-black text-amber-300">{absence.unresolved_count}</div>
+                                    <div className="text-[11px] font-semibold text-amber-100/70 mt-1">Требуют решения</div>
+                                  </div>
+                                </div>
+                              </div>
+
+                              <div className="grid md:grid-cols-2 gap-4 mt-5">
+                                <div className="rounded-2xl border border-white/8 bg-black/10 p-4">
+                                  <div className="text-[10px] font-black uppercase tracking-widest text-emerald-300/80 mb-3">Найденные замены</div>
+                                  {absence.substitutions_preview.length === 0 ? (
+                                    <div className="text-sm text-white/35">Пока нет подтверждённых замен.</div>
+                                  ) : absence.substitutions_preview.map((slot, idx) => (
+                                    <div key={idx} className="flex items-center justify-between gap-3 py-2 border-b border-white/6 last:border-b-0">
+                                      <div>
+                                        <div className="text-sm font-bold text-white">{slot.class_name} • {slot.subject}</div>
+                                        <div className="text-[11px] text-white/35">Урок {slot.lesson_number} • каб. {slot.room}</div>
+                                      </div>
+                                      <CheckCircle2 className="w-4 h-4 text-emerald-300 shrink-0" />
+                                    </div>
+                                  ))}
+                                </div>
+
+                                <div className="rounded-2xl border border-white/8 bg-black/10 p-4">
+                                  <div className="text-[10px] font-black uppercase tracking-widest text-amber-300/80 mb-3">Проблемные слоты</div>
+                                  {absence.unresolved_preview.length === 0 ? (
+                                    <div className="text-sm text-white/35">Все слоты закрыты автоматически.</div>
+                                  ) : absence.unresolved_preview.map((slot, idx) => (
+                                    <div key={idx} className="flex items-center justify-between gap-3 py-2 border-b border-white/6 last:border-b-0">
+                                      <div>
+                                        <div className="text-sm font-bold text-white">{slot.class_name} • {slot.subject}</div>
+                                        <div className="text-[11px] text-white/35">Урок {slot.lesson_number} • каб. {slot.room}</div>
+                                      </div>
+                                      <AlertTriangle className="w-4 h-4 text-amber-300 shrink-0" />
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="space-y-4">
+                      <div className="text-sm font-black uppercase tracking-widest text-white/40">Свежие поручения</div>
+                      <div className="rounded-3xl border border-white/10 bg-white/5 p-5">
+                        {opsSummary.pending_tasks.length === 0 ? (
+                          <div className="text-sm text-white/35">Нет активных задач.</div>
+                        ) : (
+                          <div className="space-y-3">
+                            {opsSummary.pending_tasks.map((task) => (
+                              <div key={task.id} className="rounded-2xl border border-white/8 bg-black/10 px-4 py-3">
+                                <div className="flex items-start justify-between gap-3">
+                                  <div>
+                                    <div className="text-sm font-bold text-white">{task.title}</div>
+                                    <div className="text-[11px] text-white/35 mt-1">{task.assignee} • {task.deadline}</div>
+                                  </div>
+                                  <span className={`text-[10px] font-black uppercase px-2 py-1 rounded-full border ${task.is_accepted ? 'text-emerald-300 border-emerald-400/20 bg-emerald-500/10' : 'text-sky-300 border-sky-400/20 bg-sky-500/10'}`}>
+                                    {task.is_accepted ? 'accepted' : 'new'}
+                                  </span>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* LIVE: Telegram Bot Feed */}
               {botFeed.length > 0 && (
-                <div className="bg-[#2a1f42] rounded-[2.5rem] border border-white/8 shadow-xl overflow-hidden">
-                  <div className="flex items-center justify-between px-8 py-5 border-b border-white/8">
+                <div className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 shadow-xl overflow-hidden">
+                  <div className="flex items-center justify-between px-6 py-4 border-b border-white/8 bg-gradient-to-r from-blue-500/5 to-transparent">
                     <div className="flex items-center gap-3">
                       <div className="w-9 h-9 rounded-xl bg-blue-500 flex items-center justify-center">
                         <MessageSquare size={18} className="text-white" />
@@ -1313,7 +1509,7 @@ const [dbTasks, setDbTasks] = useState<any[]>([]);
                       </span>
                     </div>
                   </div>
-                  <div className="divide-y divide-slate-50 max-h-80 overflow-y-auto">
+                  <div className="divide-y divide-white/5 max-h-80 overflow-y-auto">
                     {botFeed.map((msg, i) => {
                       const typeColors: Record<string,string> = {
                         food: 'bg-emerald-50 text-emerald-700 border-emerald-100',
@@ -1328,11 +1524,36 @@ const [dbTasks, setDbTasks] = useState<any[]>([]);
                       const color = typeColors[msg.parsed_type] || typeColors.other;
                       const label = typeLabels[msg.parsed_type] || 'ℹ️';
                       const timeStr = msg.created_at ? msg.created_at.slice(-8, -3) : '';
+                      const confidence = typeof msg.parsed_confidence === 'number'
+                        ? `${Math.round(msg.parsed_confidence * 100)}%`
+                        : null;
+                      const needsReview = msg.review_status === 'needs_review';
+                      const provider = msg.parsed_payload?.analysis_provider;
                       return (
                         <div key={i} className="flex items-center gap-4 px-8 py-4 hover:bg-white/5/50 transition">
                           <div className="text-xs text-white/40 font-bold min-w-[40px]">{timeStr}</div>
                           <div className="font-bold text-white/90 text-sm min-w-[130px]">{msg.sender}</div>
-                          <div className="flex-1 text-sm text-white/70 truncate">{msg.text}</div>
+                          <div className="flex-1 min-w-0">
+                            <div className="text-sm text-white/70 truncate">{msg.text}</div>
+                            <div className="flex items-center gap-2 mt-1 min-w-0">
+                              <div className="text-[11px] text-white/45 truncate">{msg.parsed_summary || 'AI analysis pending'}</div>
+                              {confidence && (
+                                <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full border border-white/10 text-[#c2ef4e] bg-[#c2ef4e]/10 shrink-0">
+                                  AI {confidence}
+                                </span>
+                              )}
+                              {provider && (
+                                <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full border border-sky-500/30 text-sky-300 bg-sky-500/10 shrink-0">
+                                  {provider}
+                                </span>
+                              )}
+                              {needsReview && (
+                                <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full border border-amber-500/30 text-amber-300 bg-amber-500/10 shrink-0">
+                                  review
+                                </span>
+                              )}
+                            </div>
+                          </div>
                           <div className={`text-[10px] font-black uppercase px-2.5 py-1 rounded-lg border ${color} shrink-0`}>{label}</div>
                         </div>
                       );
@@ -1353,7 +1574,7 @@ const [dbTasks, setDbTasks] = useState<any[]>([]);
 
               {messages.map((m, i) => (
                 <div key={i} className="flex flex-col mb-4 max-w-[90%] group">
-                  <div className={`p-6 rounded-2xl rounded-tl-none relative border transition-shadow ${m.isAudio ? 'bg-emerald-900/20 border-emerald-500/20' : 'bg-[#2a1f42] border-white/10'}`}>
+                  <div className={`p-6 rounded-2xl rounded-tl-none relative border transition-shadow ${m.isAudio ? 'bg-emerald-900/20 border-emerald-500/20' : 'bg-white/6 backdrop-blur-md border-white/10'}`}>
                     {m.isAudio ? (
                       <div className="flex flex-col">
                         <div className="flex items-center mb-3 bg-white p-3 rounded-full shadow-sm w-fit">
@@ -1408,7 +1629,7 @@ const [dbTasks, setDbTasks] = useState<any[]>([]);
                   { label: 'Выполнено сегодня', value: dbTasks.filter(t => t.is_completed).length, color: 'bg-emerald-500', icon: <CheckCircle className="w-5 h-5 text-white" /> },
                   { label: 'Исполнителей', value: new Set(dbTasks.map(t => t.assignee)).size, color: 'bg-violet-500', icon: <Users className="w-5 h-5 text-white" /> },
                 ].map((s, i) => (
-                  <div key={i} className="bg-[#2a1f42] rounded-2xl p-6 border border-white/10 flex items-center gap-5">
+                  <div key={i} className="bg-white/5 backdrop-blur-md rounded-2xl p-6 border border-white/10 flex items-center gap-5">
                     <div className={`w-12 h-12 ${s.color} rounded-2xl flex items-center justify-center shadow-lg shrink-0`}>{s.icon}</div>
                     <div>
                       <div className="text-3xl font-black text-white">{s.value}</div>
@@ -1419,7 +1640,7 @@ const [dbTasks, setDbTasks] = useState<any[]>([]);
               </div>
 
               {/* Voice recording zone — compact toolbar */}
-              <div className={`rounded-2xl border transition-all duration-300 overflow-hidden ${isRecording ? 'bg-violet-900/40 border-violet-500/40' : 'bg-[#2a1f42] border-white/8'}`}>
+              <div className={`rounded-2xl border transition-all duration-300 overflow-hidden backdrop-blur-xl ${isRecording ? 'bg-violet-900/30 border-violet-500/40 shadow-lg shadow-violet-500/10' : 'bg-white/5 border-white/10'}`}>
                 <div className="flex items-center gap-4 px-5 py-4">
                   <button
                     onClick={handleMicClick}
@@ -1434,16 +1655,16 @@ const [dbTasks, setDbTasks] = useState<any[]>([]);
                   </button>
                   <div className="flex-1 min-w-0">
                     <div className={`text-sm font-bold ${isRecording ? 'text-white' : isTranscribing ? 'text-amber-300' : 'text-white/70'}`}>
-                      {isRecording ? '🔴 Запись... (нажмите ■ чтобы остановить)' : isTranscribing ? '🧠 Обрабатываю через Whisper + GPT-4...' : 'Нажмите микрофон и продиктуйте поручение'}
+                      {isRecording ? '🔴 Запись... (нажмите ■ чтобы остановить)' : isTranscribing ? '🧠 Обрабатываю через STT + AI-оркестратор...' : 'Нажмите микрофон и продиктуйте поручение'}
                     </div>
                     <div className="text-xs text-white/30 mt-0.5">
-                      {isRecording ? 'Говорите чётко' : isTranscribing ? 'Создаю задачи автоматически...' : 'Голос → транскрипция → задача исполнителю'}
+                      {isRecording ? 'Говорите чётко и по одному поручению в фразе' : isTranscribing ? 'Преобразую речь в текст и назначаю исполнителей...' : 'Голос → транскрипция → разбор поручений'}
                     </div>
                   </div>
                 </div>
                 {isTranscribing && inputVal && (
                   <div className="mx-5 mb-4 bg-amber-500/10 border border-amber-400/20 rounded-xl p-4">
-                    <div className="text-[10px] font-black text-amber-400 uppercase tracking-widest mb-1">Whisper распознал</div>
+                    <div className="text-[10px] font-black text-amber-400 uppercase tracking-widest mb-1">Речь распознана</div>
                     <div className="text-white/80 text-sm font-semibold">{inputVal}</div>
                   </div>
                 )}
@@ -1452,12 +1673,12 @@ const [dbTasks, setDbTasks] = useState<any[]>([]);
                     <div className="text-[10px] font-black text-white/25 uppercase tracking-widest mb-2">Примеры для демо:</div>
                     <div className="flex flex-wrap gap-1.5">
                       {[
-                          'Мадина, закажи 20 бутылей воды на завтра для начальной школы',
-                          'Гульнара, подготовь актовый зал к родительскому собранию в среду',
-                          'Серик, почини проектор в кабинете 205, срочно',
-                          'Петрова, проведите открытый урок по математике в 4Б классе в пятницу',
-                          'Секретарю: распечатайте расписание на следующую неделю, 30 копий',
-                          'Охране: проверьте все запасные выходы до конца дня',
+                          'Айжан, подготовьте кабинет 104 к открытому уроку к четвергу',
+                          'Назкен, подтвердите поставку воды и салфеток на завтра',
+                          'Ахмет, проверьте проектор и звук в актовом зале до 16:00',
+                          'Секретарю: распечатайте обновлённое расписание для учительской',
+                          'Гульмира, соберите список отсутствующих по начальной школе к 09:00',
+                          'Охране: проверьте входные журналы и запасной выход после обеда',
                       ].map((phrase, i) => (
                         <button key={i} onClick={() => pushMessage(phrase, true)}
                           className="text-[11px] font-semibold text-blue-300/70 bg-blue-500/8 border border-blue-500/15 px-3 py-1.5 rounded-lg hover:bg-blue-500/15 hover:text-blue-300 transition active:scale-95 text-left">
@@ -1497,7 +1718,7 @@ const [dbTasks, setDbTasks] = useState<any[]>([]);
                         m.parsed_type === 'other' && m.parsed_summary?.includes('[recurring]')
                       );
                       return (
-                        <div className="bg-[#2a1f42] rounded-2xl border border-violet-100 shadow-sm overflow-hidden">
+                        <div className="bg-white/5 backdrop-blur-md rounded-2xl border border-violet-200/30 shadow-sm overflow-hidden">
                           <div className="flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-violet-50 to-white border-b border-violet-100">
                             <span className="text-lg">🔁</span>
                             <div>
@@ -1506,7 +1727,7 @@ const [dbTasks, setDbTasks] = useState<any[]>([]);
                             </div>
                             <span className="ml-auto text-[10px] font-black bg-violet-100 text-violet-600 px-2 py-0.5 rounded-full">{recurring.length}</span>
                           </div>
-                          <div className="divide-y divide-slate-50 max-h-[320px] overflow-y-auto">
+                          <div className="divide-y divide-white/5 max-h-[320px] overflow-y-auto">
                             {recurring.length === 0 ? (
                               <div className="px-5 py-8 text-center text-white/40 text-sm">Нет цикличных задач</div>
                             ) : recurring.map((msg: any, idx: number) => (
@@ -1539,7 +1760,7 @@ const [dbTasks, setDbTasks] = useState<any[]>([]);
                         other:    { color: 'bg-blue-100 text-blue-700',     label: '📋 Задача' },
                       };
                       return (
-                        <div className="bg-[#2a1f42] rounded-2xl border border-amber-100 shadow-sm overflow-hidden">
+                        <div className="bg-white/5 backdrop-blur-md rounded-2xl border border-amber-200/30 shadow-sm overflow-hidden">
                           <div className="flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-amber-50 to-white border-b border-amber-100">
                             <span className="text-lg">⚡</span>
                             <div>
@@ -1548,7 +1769,7 @@ const [dbTasks, setDbTasks] = useState<any[]>([]);
                             </div>
                             <span className="ml-auto text-[10px] font-black bg-amber-100 text-amber-600 px-2 py-0.5 rounded-full">{spontaneous.length}</span>
                           </div>
-                          <div className="divide-y divide-slate-50 max-h-[320px] overflow-y-auto">
+                          <div className="divide-y divide-white/5 max-h-[320px] overflow-y-auto">
                             {spontaneous.length === 0 ? (
                               <div className="px-5 py-8 text-center text-white/40 text-sm">Нет оперативных событий</div>
                             ) : spontaneous.map((msg: any, idx: number) => {
@@ -1578,14 +1799,14 @@ const [dbTasks, setDbTasks] = useState<any[]>([]);
 
               {/* ── Канбан-доска ── */}
               {dbTasks.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-16 bg-[#2a1f42] rounded-2xl border border-dashed border-white/10 text-center">
+                <div className="flex flex-col items-center justify-center py-16 bg-white/6 backdrop-blur-md rounded-2xl border border-dashed border-white/10 text-center">
                   <CheckCircle2 className="w-10 h-10 text-white/20 mb-3" />
                   <div className="font-bold text-white/50">Задач пока нет — продиктуйте поручение</div>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   {/* Колонка 1: Новые */}
-                  <div className="bg-[#2a1f42] rounded-2xl border border-white/8 overflow-hidden">
+                  <div className="bg-white/5 backdrop-blur-md rounded-2xl border border-white/10 overflow-hidden">
                     <div className="flex items-center gap-2.5 px-4 py-3 border-b border-white/8">
                       <div className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
                       <span className="text-xs font-black text-white/50 uppercase tracking-widest">Новые</span>
@@ -1604,7 +1825,7 @@ const [dbTasks, setDbTasks] = useState<any[]>([]);
                   </div>
 
                   {/* Колонка 2: В работе */}
-                  <div className="bg-[#2a1f42] rounded-2xl border border-white/8 overflow-hidden">
+                  <div className="bg-white/5 backdrop-blur-md rounded-2xl border border-white/10 overflow-hidden">
                     <div className="flex items-center gap-2.5 px-4 py-3 border-b border-white/8">
                       <div className="w-2 h-2 rounded-full bg-blue-400 animate-pulse" />
                       <span className="text-xs font-black text-white/50 uppercase tracking-widest">В работе</span>
@@ -1623,7 +1844,7 @@ const [dbTasks, setDbTasks] = useState<any[]>([]);
                   </div>
 
                   {/* Колонка 3: Выполнено */}
-                  <div className="bg-[#2a1f42] rounded-2xl border border-white/8 overflow-hidden">
+                  <div className="bg-white/5 backdrop-blur-md rounded-2xl border border-white/10 overflow-hidden">
                     <div className="flex items-center gap-2.5 px-4 py-3 border-b border-white/8">
                       <div className="w-2 h-2 rounded-full bg-emerald-400" />
                       <span className="text-xs font-black text-white/50 uppercase tracking-widest">Выполнено</span>
@@ -1661,7 +1882,7 @@ const [dbTasks, setDbTasks] = useState<any[]>([]);
                     </p>
                   </div>
 
-                  <div className="bg-[#2a1f42] rounded-2xl border border-white/8 p-5 space-y-4">
+                  <div className="bg-white/5 backdrop-blur-md rounded-2xl border border-white/10 p-5 space-y-4">
                     <label className="block">
                       <div className="text-[10px] font-black text-white/40 uppercase tracking-widest mb-2">Кто отсутствует</div>
                       <input
@@ -1723,7 +1944,7 @@ const [dbTasks, setDbTasks] = useState<any[]>([]);
                   )}
 
                   {absenceResult && (
-                    <div className="bg-[#2a1f42] rounded-2xl border border-white/8 p-4 space-y-3">
+                    <div className="bg-white/5 backdrop-blur-md rounded-2xl border border-white/10 p-4 space-y-3">
                       <div className="text-[10px] font-black text-white/30 uppercase tracking-widest">Итог</div>
                       <div className="flex justify-between items-center">
                         <span className="text-xs text-white/50">Учитель</span>
@@ -1749,7 +1970,7 @@ const [dbTasks, setDbTasks] = useState<any[]>([]);
                   {absenceResult.substitutions.length > 0 && (
                     <div className="grid gap-5">
                       {absenceResult.substitutions.map((item) => (
-                        <div key={item.entry_id} className="bg-[#2a1f42] rounded-[2rem] p-6 md:p-8 shadow-xl border border-emerald-400/20">
+                        <div key={item.entry_id} className="bg-white/5 backdrop-blur-xl rounded-[2rem] p-6 md:p-8 shadow-xl border border-emerald-500/20 hover:border-emerald-500/35 transition-all">
                           <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
                             <div className="flex items-start gap-5">
                               <div className="w-16 h-16 rounded-2xl bg-emerald-500/10 text-emerald-300 flex flex-col items-center justify-center font-black text-2xl shrink-0">
@@ -1833,7 +2054,7 @@ const [dbTasks, setDbTasks] = useState<any[]>([]);
                   )}
 
                   {absenceResult.unresolved.length > 0 && (
-                    <div className="bg-[#2a1f42] rounded-[2rem] border border-amber-400/20 p-6 md:p-8">
+                    <div className="bg-white/5 backdrop-blur-xl rounded-[2rem] border border-amber-500/20 p-6 md:p-8">
                       <div className="flex items-center gap-3 mb-5">
                         <AlertTriangle className="w-5 h-5 text-amber-300" />
                         <h4 className="text-xl font-black text-white">Слоты, которые требуют ручного решения</h4>
@@ -1872,7 +2093,9 @@ const [dbTasks, setDbTasks] = useState<any[]>([]);
 
               {!absenceResult && <div className="grid gap-6">
                 {mockSchedule.map((s, idx) => (
-                  <div key={idx} className={`bg-[#2a1f42] rounded-[2.5rem] p-8 shadow-xl border-2 transition-all group ${s.alert ? (s.status === 'applied' ? 'border-blue-100 bg-blue-50/20' : 'border-rose-100 animate-pulse-subtle') : 'border-white/8'}`}>
+                  <div key={idx} className={`bg-white/5 backdrop-blur-xl rounded-[2rem] p-8 shadow-xl border transition-all group relative overflow-hidden ${s.alert ? (s.status === 'applied' ? 'border-emerald-500/30 shadow-emerald-500/5' : 'border-rose-500/30 shadow-rose-500/5 animate-pulse-subtle') : 'border-white/8'}`}>
+                    {s.alert && s.status !== 'applied' && <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-rose-500 to-orange-500 rounded-l-[2rem]" />}
+                    {s.status === 'applied' && <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-emerald-400 to-teal-500 rounded-l-[2rem]" />}
 
                     {/* ---- ROW 1: Lesson info + replacement ---- */}
                     <div className="flex items-start justify-between">
@@ -2004,22 +2227,22 @@ const [dbTasks, setDbTasks] = useState<any[]>([]);
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {[
                   {
-                    num: '№130', title: 'Питание и посещаемость',
-                    desc: 'Порядок сбора данных, питание, льготные категории.',
+                    num: '№130', title: 'Питание и ежедневные сводки',
+                    desc: 'Что школа должна фиксировать по столовой, посещаемости и льготным категориям.',
                     color: 'from-emerald-500 to-teal-600',
-                    query: 'Нормы питания №130', tags: ['Ежедневно', 'Столовая', 'Льготники'],
+                    query: 'Нормы питания №130', tags: ['Утренний отчёт', 'Столовая', 'Посещаемость'],
                   },
                   {
-                    num: '№110', title: 'Замена учителей',
-                    desc: 'Порядок замещения, оплата, журнал пропущенных уроков.',
+                    num: '№110', title: 'Замены и нагрузка',
+                    desc: 'Как оформить замену, зафиксировать часы и не допустить перегруз сотрудника.',
                     color: 'from-blue-500 to-indigo-600',
-                    query: 'Приказ №110: Замены', tags: ['ЖУПЗ', 'Оплата', 'Профиль'],
+                    query: 'Приказ №110: Замены', tags: ['Замещение', 'Оплата', 'Нагрузка'],
                   },
                   {
-                    num: '№76', title: 'Аттестация педагогов',
-                    desc: 'Категории, надбавки, сроки, портфолио педагога.',
+                    num: '№76', title: 'Аттестация и портфолио',
+                    desc: 'Сроки, документы, квалификационные категории и подготовка портфолио педагога.',
                     color: 'from-violet-500 to-purple-600',
-                    query: 'Приказ №76: Аттестация', tags: ['Каждые 5 лет', 'БДО +30-50%', 'Портфолио'],
+                    query: 'Приказ №76: Аттестация', tags: ['Категории', 'Портфолио', 'Сроки'],
                   },
                 ].map((law, i) => (
                   <button
@@ -2045,7 +2268,7 @@ const [dbTasks, setDbTasks] = useState<any[]>([]);
               </div>
 
               {/* Search + mode toggle */}
-              <div className="bg-[#2a1f42] rounded-2xl border border-white/10 p-8 space-y-6">
+              <div className="bg-white/5 backdrop-blur-md rounded-2xl border border-white/10 p-8 space-y-6">
                 <div className="flex gap-2 bg-white/8 p-1 rounded-xl w-fit">
                   <button onClick={() => setRagMode('search')} className={`px-5 py-2 rounded-xl text-xs font-black transition-all ${ragMode === 'search' ? 'bg-blue-600 text-white shadow-md' : 'text-white/40 hover:text-white/70'}`}>
                     🔍 Семантический поиск
@@ -2063,7 +2286,7 @@ const [dbTasks, setDbTasks] = useState<any[]>([]);
                       value={ragQuery}
                       onChange={(e) => setRagQuery(e.target.value)}
                       onKeyDown={(e) => e.key === 'Enter' && handleRagSearch()}
-                      placeholder={ragMode === 'search' ? 'Спросите об оплате замен, нормах питания...' : 'Введите тему для генерации чек-листа...'}
+                      placeholder={ragMode === 'search' ? 'Например: как оформить замену или что запросить у столовой?' : 'Например: чек-лист для приказа о замене учителя'}
                       className="flex-1 bg-transparent text-white placeholder-slate-400 py-4 text-base focus:outline-none font-medium"
                     />
                     {ragQuery && <button onClick={() => setRagQuery('')} className="text-white/30 hover:text-white/60 transition"><X className="w-4 h-4" /></button>}
@@ -2082,8 +2305,8 @@ const [dbTasks, setDbTasks] = useState<any[]>([]);
                 <div className="flex flex-wrap gap-2">
                   <span className="text-xs font-bold text-white/40 uppercase tracking-widest self-center">Быстро:</span>
                   {(ragMode === 'search'
-                    ? ['Нормы питания №130', 'Приказ №110: Замены', 'Приказ №76: Аттестация', 'Как оформить замену?']
-                    : ['Приказ №130', 'Приказ №110', 'Аттестация педагога']
+                    ? ['Нормы питания №130', 'Приказ №110: Замены', 'Приказ №76: Аттестация', 'Какие документы нужны для замены учителя?']
+                    : ['Чек-лист по питанию', 'Приказ о замене учителя', 'Аттестация педагога']
                   ).map((txt, i) => (
                     <button key={i} onClick={() => handleRagSearch(txt)}
                       className="text-xs font-bold bg-white/5 hover:bg-blue-50 text-white/70 hover:text-blue-600 border border-white/10 hover:border-blue-200 px-3 py-1.5 rounded-xl transition-all">
@@ -2095,7 +2318,7 @@ const [dbTasks, setDbTasks] = useState<any[]>([]);
 
               {/* Loading */}
               {isRagLoading && (
-                <div className="bg-[#2a1f42] rounded-3xl border border-white/8 shadow-lg p-12 flex flex-col items-center gap-6">
+                <div className="bg-white/5 backdrop-blur-xl rounded-3xl border border-blue-500/20 shadow-lg p-12 flex flex-col items-center gap-6 shadow-blue-500/5">
                   <div className="flex gap-3">
                     {[0, 0.15, 0.3].map((delay, i) => (
                       <div key={i} className="w-3 h-3 bg-blue-500 rounded-full animate-bounce" style={{animationDelay: `${delay}s`}} />
@@ -2121,7 +2344,7 @@ const [dbTasks, setDbTasks] = useState<any[]>([]);
 
               {/* Result */}
               {ragResult && !isRagLoading && (
-                <div className="bg-[#2a1f42] border border-white/10 rounded-2xl overflow-hidden animate-in slide-in-from-bottom-4 duration-500">
+                <div className="bg-white/5 backdrop-blur-xl border border-white/12 rounded-2xl overflow-hidden animate-in slide-in-from-bottom-4 duration-500 shadow-xl">
                   {/* Result header */}
                   <div className="bg-gradient-to-r from-[#3d1f6e] to-[#2a1f6e] px-8 py-5 flex items-center justify-between border-b border-white/10">
                     <div className="flex items-center gap-3">
@@ -2211,7 +2434,7 @@ const [dbTasks, setDbTasks] = useState<any[]>([]);
 
           {activeTab === 'timetable' && (
             <div className="max-w-4xl mx-auto space-y-8 pb-32">
-              <div className="bg-gradient-to-r from-[#2a1f42] to-[#1a1030] border border-[#c2ef4e]/20 rounded-2xl p-8 text-white relative overflow-hidden shadow-xl">
+              <div className="bg-gradient-to-r from-violet-900/50 via-purple-900/30 to-blue-900/40 backdrop-blur-xl border border-[#c2ef4e]/20 rounded-2xl p-8 text-white relative overflow-hidden shadow-xl">
                 <div className="absolute top-0 right-0 w-64 h-64 bg-white opacity-5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4"></div>
                 <div className="relative z-10 flex justify-between items-center">
                   <div>
@@ -2247,27 +2470,22 @@ const [dbTasks, setDbTasks] = useState<any[]>([]);
                   </div>
                   {scheduleSummary && (
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                      <div className="bg-[#2a1f42] p-4 rounded-2xl border border-white/10">
-                        <div className="text-[10px] font-black text-white/40 uppercase tracking-widest mb-2">Всего блоков</div>
-                        <div className="text-2xl font-black text-white">{scheduleSummary.total_entries}</div>
-                      </div>
-                      <div className="bg-[#2a1f42] p-4 rounded-2xl border border-white/10">
-                        <div className="text-[10px] font-black text-white/40 uppercase tracking-widest mb-2">Классов</div>
-                        <div className="text-2xl font-black text-white">{scheduleSummary.classes}</div>
-                      </div>
-                      <div className="bg-[#2a1f42] p-4 rounded-2xl border border-amber-400/20">
-                        <div className="text-[10px] font-black text-amber-300 uppercase tracking-widest mb-2">Self-study</div>
-                        <div className="text-2xl font-black text-amber-300">{scheduleSummary.self_study_slots}</div>
-                      </div>
-                      <div className="bg-[#2a1f42] p-4 rounded-2xl border border-blue-400/20">
-                        <div className="text-[10px] font-black text-blue-300 uppercase tracking-widest mb-2">Ленты</div>
-                        <div className="text-2xl font-black text-blue-300">{scheduleSummary.lenta_slots}</div>
-                      </div>
+                      {[
+                        { label: 'Всего блоков', value: scheduleSummary.total_entries, color: 'text-white', border: 'border-white/10', bg: 'from-white/6' },
+                        { label: 'Классов', value: scheduleSummary.classes, color: 'text-white', border: 'border-white/10', bg: 'from-white/6' },
+                        { label: 'Self-study', value: scheduleSummary.self_study_slots, color: 'text-amber-300', border: 'border-amber-400/20', bg: 'from-amber-500/8' },
+                        { label: 'Ленты', value: scheduleSummary.lenta_slots, color: 'text-blue-300', border: 'border-blue-400/20', bg: 'from-blue-500/8' },
+                      ].map((s, i) => (
+                        <div key={i} className={`bg-gradient-to-br ${s.bg} to-transparent backdrop-blur-md p-5 rounded-2xl border ${s.border}`}>
+                          <div className={`text-[10px] font-black ${s.color} opacity-60 uppercase tracking-widest mb-2`}>{s.label}</div>
+                          <div className={`text-3xl font-black ${s.color}`}>{s.value}</div>
+                        </div>
+                      ))}
                     </div>
                   )}
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {generatedSchedule.slice(0, 18).map((lesson, idx) => (
-                      <div key={idx} className="bg-[#2a1f42] p-5 rounded-2xl border border-white/10 hover:border-white/20 transition">
+                      <div key={idx} className="bg-white/5 backdrop-blur-md p-5 rounded-2xl border border-white/8 hover:border-white/20 hover:bg-white/8 transition-all">
                         <div className="flex justify-between items-start mb-2">
                           <span className="bg-blue-50 text-blue-600 text-xs font-black uppercase tracking-widest px-3 py-1 rounded-full">{lesson.Класс}</span>
                           <span className="text-white/40 font-bold text-sm bg-white/5 px-2 py-0.5 rounded-lg">{lesson.День}, {lesson.Урок} урок</span>
@@ -2326,53 +2544,55 @@ const [dbTasks, setDbTasks] = useState<any[]>([]);
               {/* Stats row */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {[
-                  { label: 'Задач за неделю', value: 34, color: 'bg-blue-600', icon: <Zap className="w-5 h-5 text-white" />, change: '+12%' },
-                  { label: 'Замен проведено', value: 7, color: 'bg-violet-500', icon: <Calendar className="w-5 h-5 text-white" />, change: '-2' },
-                  { label: 'Средняя явка', value: '94%', color: 'bg-emerald-500', icon: <Users className="w-5 h-5 text-white" />, change: '+1.5%' },
-                  { label: 'Инцидентов', value: 3, color: 'bg-rose-500', icon: <AlertTriangle className="w-5 h-5 text-white" />, change: '-40%' },
+                  { label: 'Поручений за неделю', value: 28, gradient: 'from-blue-600 to-blue-500', icon: <Zap className="w-5 h-5 text-white" />, change: '+8%', chColor: 'text-blue-300 bg-blue-500/10' },
+                  { label: 'Автозамен', value: 5, gradient: 'from-violet-600 to-purple-500', icon: <Calendar className="w-5 h-5 text-white" />, change: '+1', chColor: 'text-violet-300 bg-violet-500/10' },
+                  { label: 'Средняя явка', value: '96%', gradient: 'from-emerald-600 to-teal-500', icon: <Users className="w-5 h-5 text-white" />, change: '+2%', chColor: 'text-emerald-300 bg-emerald-500/10' },
+                  { label: 'Критичных инцидентов', value: 2, gradient: 'from-rose-600 to-pink-500', icon: <AlertTriangle className="w-5 h-5 text-white" />, change: '-1', chColor: 'text-rose-300 bg-rose-500/10' },
                 ].map((s, i) => (
-                  <div key={i} className="bg-[#2a1f42] rounded-2xl p-6 border border-white/10">
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className={`w-10 h-10 ${s.color} rounded-xl flex items-center justify-center shrink-0`}>{s.icon}</div>
-                      <div className="text-[10px] font-bold text-[#c2ef4e] bg-[#c2ef4e]/10 px-2 py-0.5 rounded-full">{s.change}</div>
+                  <div key={i} className="bg-white/5 backdrop-blur-xl rounded-2xl p-5 border border-white/8 hover:bg-white/8 transition-all group">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className={`w-10 h-10 bg-gradient-to-br ${s.gradient} rounded-xl flex items-center justify-center shrink-0 shadow-lg`}>{s.icon}</div>
+                      <div className={`text-[10px] font-black ${s.chColor} px-2 py-1 rounded-lg`}>{s.change}</div>
                     </div>
-                    <div className="text-3xl font-bold text-white">{s.value}</div>
-                    <div className="text-[10px] font-medium text-white/40 uppercase tracking-widest mt-1">{s.label}</div>
+                    <div className="text-3xl font-black text-white">{s.value}</div>
+                    <div className="text-[10px] font-medium text-white/40 uppercase tracking-widest mt-1.5">{s.label}</div>
                   </div>
                 ))}
               </div>
 
               {/* Attendance trend (CSS bar chart) */}
-              <div className="bg-[#2a1f42] rounded-2xl p-8 border border-white/10">
-                <div className="flex items-center justify-between mb-6">
+              <div className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 overflow-hidden">
+                <div className="px-8 pt-6 pb-4 border-b border-white/6 bg-gradient-to-r from-blue-500/5 to-transparent">
+                  <div className="flex items-center justify-between">
                   <div>
-                    <div className="font-bold text-lg text-white">Посещаемость по дням</div>
-                    <div className="text-xs text-white/40 font-medium">Последние 7 дней • порции / отчёты</div>
+                    <div className="font-bold text-lg text-white">Операционная нагрузка по дням</div>
+                    <div className="text-xs text-white/40 font-medium">Последние 7 дней • поручения / отчёты</div>
                   </div>
                   <div className="flex gap-3 text-[10px] font-bold uppercase tracking-widest">
-                    <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-blue-500"></span> Порции</span>
+                    <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-blue-500"></span> Поручения</span>
                     <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-emerald-400"></span> Отчёты</span>
                   </div>
                 </div>
-                <div className="flex items-end gap-3 h-48">
+                </div>
+                <div className="px-8 pb-8 pt-6 flex items-end gap-3 h-48">
                   {[
-                    { day: 'Пн', portions: 120, reports: 6 },
-                    { day: 'Вт', portions: 135, reports: 7 },
-                    { day: 'Ср', portions: 128, reports: 6 },
-                    { day: 'Чт', portions: 142, reports: 8 },
-                    { day: 'Пт', portions: 115, reports: 5 },
-                    { day: 'Сб', portions: 45, reports: 3 },
+                    { day: 'Пн', portions: 14, reports: 6 },
+                    { day: 'Вт', portions: 18, reports: 7 },
+                    { day: 'Ср', portions: 16, reports: 8 },
+                    { day: 'Чт', portions: 21, reports: 9 },
+                    { day: 'Пт', portions: 13, reports: 5 },
+                    { day: 'Сб', portions: 4, reports: 2 },
                     { day: 'Вс', portions: 0, reports: 0 },
                   ].map((d, i) => (
                     <div key={i} className="flex-1 flex flex-col items-center gap-1">
                       <div className="w-full flex gap-1 items-end justify-center" style={{ height: '160px' }}>
                         <div 
                           className="w-5 bg-gradient-to-t from-blue-600 to-blue-400 rounded-t-lg transition-all duration-500" 
-                          style={{ height: `${(d.portions / 142) * 100}%`, minHeight: d.portions > 0 ? '8px' : '0' }}
+                          style={{ height: `${(d.portions / 21) * 100}%`, minHeight: d.portions > 0 ? '8px' : '0' }}
                         />
                         <div 
                           className="w-5 bg-gradient-to-t from-emerald-500 to-emerald-300 rounded-t-lg transition-all duration-500" 
-                          style={{ height: `${(d.reports / 8) * 100}%`, minHeight: d.reports > 0 ? '8px' : '0' }}
+                          style={{ height: `${(d.reports / 9) * 100}%`, minHeight: d.reports > 0 ? '8px' : '0' }}
                         />
                       </div>
                       <span className="text-[10px] font-bold text-white/40">{d.day}</span>
@@ -2383,13 +2603,16 @@ const [dbTasks, setDbTasks] = useState<any[]>([]);
 
               {/* Bottom row: Top incidents + Task completion */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="bg-[#2a1f42] rounded-3xl p-8 border border-white/8 shadow-xl">
-                  <div className="font-black text-lg text-white mb-4">Топ-3 типа инцидентов</div>
+                <div className="bg-white/5 backdrop-blur-xl rounded-3xl border border-white/8 shadow-xl overflow-hidden">
+                  <div className="px-8 py-5 border-b border-white/6 bg-gradient-to-r from-amber-500/8 to-transparent">
+                  <div className="font-black text-lg text-white">Топ-3 частых запросов</div>
+                  </div>
+                  <div className="p-8">
                   <div className="space-y-4">
                     {[
-                      { type: 'Поломка оборудования', count: 5, pct: 50, color: 'bg-amber-500' },
-                      { type: 'Конфликт между учениками', count: 3, pct: 30, color: 'bg-rose-500' },
-                      { type: 'Протечка / авария', count: 2, pct: 20, color: 'bg-blue-500' },
+                      { type: 'Замены по болезни', count: 6, pct: 46, color: 'bg-amber-500' },
+                      { type: 'Хозяйственные заявки', count: 4, pct: 31, color: 'bg-rose-500' },
+                      { type: 'Отчёты по питанию', count: 3, pct: 23, color: 'bg-blue-500' },
                     ].map((inc, i) => (
                       <div key={i}>
                         <div className="flex justify-between items-center mb-1.5">
@@ -2402,32 +2625,43 @@ const [dbTasks, setDbTasks] = useState<any[]>([]);
                       </div>
                     ))}
                   </div>
+                  </div>
                 </div>
-                <div className="bg-[#2a1f42] rounded-3xl p-8 border border-white/8 shadow-xl">
-                  <div className="font-black text-lg text-white mb-4">Эффективность задач</div>
-                  <div className="flex items-center justify-center py-4">
-                    <div className="relative w-36 h-36">
+                <div className="bg-white/5 backdrop-blur-xl rounded-3xl border border-white/8 shadow-xl overflow-hidden">
+                  <div className="px-8 py-5 border-b border-white/6 bg-gradient-to-r from-blue-500/8 to-transparent">
+                  <div className="font-black text-lg text-white">Исполнение поручений</div>
+                  </div>
+                  <div className="p-8">
+                  <div className="flex items-center justify-center py-2">
+                    <div className="relative w-32 h-32">
                       <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
-                        <circle cx="18" cy="18" r="15.5" fill="none" stroke="#f1f5f9" strokeWidth="3" />
-                        <circle cx="18" cy="18" r="15.5" fill="none" stroke="#3b82f6" strokeWidth="3" strokeDasharray="97.4" strokeDashoffset="24.3" strokeLinecap="round" />
+                        <circle cx="18" cy="18" r="15.5" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="3" />
+                        <circle cx="18" cy="18" r="15.5" fill="none" stroke="url(#blueGrad)" strokeWidth="3" strokeDasharray="97.4" strokeDashoffset="24.3" strokeLinecap="round" />
+                        <defs>
+                          <linearGradient id="blueGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="0%" stopColor="#60a5fa" />
+                            <stop offset="100%" stopColor="#818cf8" />
+                          </linearGradient>
+                        </defs>
                       </svg>
                       <div className="absolute inset-0 flex flex-col items-center justify-center">
-                        <div className="text-3xl font-black text-white">75%</div>
+                        <div className="text-3xl font-black text-white">82%</div>
                         <div className="text-[9px] font-bold text-white/40 uppercase tracking-widest">Выполнено</div>
                       </div>
                     </div>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8 pb-10">
+                  <div className="grid grid-cols-3 gap-4 mt-4">
                     {[
-                      { label: 'Выполнено', value: 26, color: 'text-blue-600' },
-                      { label: 'В работе', value: 5, color: 'text-amber-500' },
-                      { label: 'Просрочено', value: 3, color: 'text-rose-500' },
+                      { label: 'Выполнено', value: 23, color: 'text-blue-400' },
+                      { label: 'В работе', value: 4, color: 'text-amber-400' },
+                      { label: 'Просрочено', value: 1, color: 'text-rose-400' },
                     ].map((s, i) => (
-                      <div key={i} className="text-center">
+                      <div key={i} className="text-center bg-white/4 rounded-2xl py-3">
                         <div className={`text-xl font-black ${s.color}`}>{s.value}</div>
-                        <div className="text-[9px] font-bold text-white/40 uppercase tracking-widest">{s.label}</div>
+                        <div className="text-[9px] font-bold text-white/40 uppercase tracking-widest mt-0.5">{s.label}</div>
                       </div>
                     ))}
+                  </div>
                   </div>
                 </div>
               </div>
@@ -2437,8 +2671,8 @@ const [dbTasks, setDbTasks] = useState<any[]>([]);
                 <div className="flex items-center justify-between">
                   <div>
             <div className="text-xs font-black uppercase tracking-widest text-lime-200/80 mb-2">Метрика</div>
-                    <div className="text-2xl font-black">Директор тратил 2 часа в день на рутину →</div>
-                    <div className="text-4xl font-black mt-1">Теперь 5 минут</div>
+                    <div className="text-2xl font-black">Утренний сбор данных занимал до 90 минут →</div>
+                    <div className="text-4xl font-black mt-1">Теперь около 12 минут</div>
                   </div>
                   <div className="text-8xl font-black opacity-20">24×</div>
                 </div>
@@ -2451,11 +2685,19 @@ const [dbTasks, setDbTasks] = useState<any[]>([]);
 
         </div>
 
-        <div className="px-4 md:px-8 py-4 bg-[#16102a]/80 backdrop-blur-xl border-t border-white/8 z-20">
-          <div className="max-w-4xl mx-auto flex items-center bg-white/8 rounded-2xl border border-white/10 p-2">
-            <input type="text" value={inputVal} onChange={(e) => setInputVal(e.target.value)} onKeyPress={(e) => e.key === 'Enter' && handleSend()} placeholder={isRecording ? "🎤 Идет запись ГС..." : "Отправить текст или ГС для LLM-обработки..."} className="flex-1 text-white p-3 bg-transparent border-none focus:outline-none text-base font-medium placeholder-white/30 pl-5" />
-            <div className="flex space-x-2 mr-1">
-              {inputVal ? <button onClick={handleSend} className="p-3 bg-[#c2ef4e] text-[#1f1633] rounded-xl font-bold"><Send className="w-5 h-5"/></button> : <button onClick={handleMicClick} className={`p-3 text-[#1f1633] rounded-xl flex items-center justify-center ${isRecording ? 'bg-rose-500 text-white animate-pulse' : 'bg-[#c2ef4e]'}`}><Mic className="w-5 h-5" /></button>}
+        <div className="px-4 md:px-8 py-4 bg-[#0e0820]/85 backdrop-blur-2xl border-t border-white/6 z-20">
+          <div className="max-w-4xl mx-auto flex items-center bg-white/6 rounded-2xl border border-white/10 p-1.5 gap-2 focus-within:border-white/20 transition-all shadow-lg shadow-black/20">
+            <input type="text" value={inputVal} onChange={(e) => setInputVal(e.target.value)} onKeyPress={(e) => e.key === 'Enter' && handleSend()} placeholder={isRecording ? "🎤 Идет запись ГС..." : "Отправить сообщение или голосовую команду..."} className="flex-1 text-white p-3 bg-transparent border-none focus:outline-none text-sm font-medium placeholder-white/25 pl-4" />
+            <div className="flex items-center gap-1.5 mr-0.5">
+              {inputVal ? (
+                <button onClick={handleSend} className="p-2.5 bg-[#c2ef4e] text-[#1f1633] rounded-xl font-bold hover:bg-[#a8d63a] transition-all active:scale-95 shadow-md shadow-[#c2ef4e]/20">
+                  <Send className="w-4 h-4"/>
+                </button>
+              ) : (
+                <button onClick={handleMicClick} className={`p-2.5 rounded-xl flex items-center justify-center transition-all active:scale-95 ${isRecording ? 'bg-rose-500 text-white animate-pulse shadow-md shadow-rose-500/30' : 'bg-[#c2ef4e] text-[#1f1633] hover:bg-[#a8d63a] shadow-md shadow-[#c2ef4e]/20'}`}>
+                  <Mic className="w-4 h-4" />
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -2463,7 +2705,7 @@ const [dbTasks, setDbTasks] = useState<any[]>([]);
         {/* SUCCESS OVERLAY */}
         {showSuccessOverlay && (
           <div className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-900/40 backdrop-blur-md animate-in fade-in duration-500">
-            <div className="bg-[#2a1f42] p-12 rounded-3xl shadow-[0_50px_100px_rgba(0,0,0,0.5)] flex flex-col items-center text-center max-w-lg border border-white/10 animate-in zoom-in duration-500">
+            <div className="bg-[#130a24]/95 backdrop-blur-2xl p-12 rounded-3xl shadow-[0_50px_100px_rgba(0,0,0,0.6)] flex flex-col items-center text-center max-w-lg border border-white/15 animate-in zoom-in duration-500">
                <div className="w-24 h-24 bg-[#c2ef4e]/15 rounded-full flex items-center justify-center mb-8">
                   <CheckCircle size={48} strokeWidth={2} className="text-[#c2ef4e]" />
                </div>
@@ -2476,7 +2718,7 @@ const [dbTasks, setDbTasks] = useState<any[]>([]);
         {/* AI Generating Order Loader */}
         {isGeneratingOrder && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center bg-blue-900/40 backdrop-blur-md">
-             <div className="bg-[#2a1f42] p-12 rounded-3xl shadow-2xl text-center space-y-6 animate-in zoom-in duration-300 border border-white/10">
+             <div className="bg-[#130a24]/95 backdrop-blur-2xl p-12 rounded-3xl shadow-2xl text-center space-y-6 animate-in zoom-in duration-300 border border-white/15">
                 <div className="relative w-24 h-24 mx-auto">
                    <div className="absolute inset-0 bg-blue-100 rounded-3xl animate-spin duration-[3000ms]"></div>
                    <div className="absolute inset-0 flex items-center justify-center text-blue-600">
@@ -2494,8 +2736,8 @@ const [dbTasks, setDbTasks] = useState<any[]>([]);
         {/* Legal Order Modal (Printable) */}
         {selectedOrder && (
           <div className="fixed inset-0 z-[110] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 overflow-y-auto">
-             <div className="bg-[#2a1f42] w-full max-w-4xl rounded-3xl shadow-2xl overflow-hidden animate-in slide-in-from-bottom-10 duration-500 flex flex-col max-h-[90vh] border border-white/10">
-                <div className="px-10 py-6 border-b border-white/8 flex items-center justify-between bg-[#2a1f42] relative z-20">
+             <div className="bg-[#130a24]/95 backdrop-blur-2xl w-full max-w-4xl rounded-3xl shadow-2xl overflow-hidden animate-in slide-in-from-bottom-10 duration-500 flex flex-col max-h-[90vh] border border-white/15">
+                <div className="px-10 py-6 border-b border-white/8 flex items-center justify-between bg-white/5 relative z-20">
                    <div className="flex items-center space-x-4">
                       <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center">
                          <FileText size={24} />
@@ -2667,7 +2909,7 @@ function GenerateReportButton() {
   ] as const;
 
   return (
-    <div className="bg-[#2a1f42] border border-white/10 rounded-3xl p-8 space-y-6">
+    <div className="bg-white/6 backdrop-blur-xl border border-white/12 rounded-3xl p-8 space-y-6">
       {/* Header */}
       <div className="flex items-center gap-5">
         <div className="w-14 h-14 bg-[#c2ef4e]/10 rounded-2xl flex items-center justify-center text-[#c2ef4e] shrink-0">
