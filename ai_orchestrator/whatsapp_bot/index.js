@@ -1,3 +1,4 @@
+require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') });
 const { Client, LocalAuth } = require('whatsapp-web.js');
 const qrcode = require('qrcode-terminal');
 const axios = require('axios');
@@ -39,7 +40,9 @@ client.on('auth_failure', (msg) => {
     scheduleReinit();
 });
 
-const ALLOWED_CHAT_ID = process.env.ALLOWED_CHAT_ID || null;
+const SOURCE_CHAT_ID = process.env.SOURCE_CHAT_ID || process.env.ALLOWED_CHAT_ID || null;
+console.log(`[WA] Фильтр чата: ${SOURCE_CHAT_ID || 'все чаты'}`);
+const ALLOWED_CHAT_ID = SOURCE_CHAT_ID;
 
 client.on('message', async msg => {
     console.log(`[WA] Входящее сообщение от ${msg.from}: ${msg.body}`);
