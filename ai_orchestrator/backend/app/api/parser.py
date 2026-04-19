@@ -9,11 +9,12 @@ router = APIRouter()
 class MessagePayload(BaseModel):
     text: str
     user_id: int
+    sender: str | None = None
 
 @router.post("/parse-message", response_model=ParsedMessage)
 async def parse_message(payload: MessagePayload, db: Session = Depends(get_db)):
     from app.db.models import TaskReminder
-    parsed_data = parse_with_llm(payload.text)
+    parsed_data = parse_with_llm(payload.text, sender=payload.sender)
     
     # ─── ЛОГИКА ПОДТВЕРЖДЕНИЯ (FEEDBACK LOOP) ───
     if parsed_data.is_acceptance:

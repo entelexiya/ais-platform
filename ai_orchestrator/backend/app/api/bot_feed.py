@@ -2,12 +2,15 @@
 API роутер для Telegram-бот данных.
 Позволяет дашборду получать реальные сообщения учителей из SQLite.
 """
+import json
 import sqlite3
 import os
 from fastapi import APIRouter
 from datetime import datetime
 
 from app.db.database import SessionLocal
+from app.db.models import TeacherAbsenceEvent, ScheduleEntry, TimeSlot, Class, Room, TaskReminder
+from app.ai.llm_parser import parse_with_llm
 from app.services.notification_service import build_absence_reply, resolve_whatsapp_target
 from app.services.scheduler import process_teacher_absence_event
 
@@ -18,6 +21,7 @@ _api_dir = os.path.dirname(os.path.abspath(__file__))
 _app_dir = os.path.dirname(_api_dir)
 _backend_dir = os.path.dirname(_app_dir)
 DB_PATH = os.path.join(_backend_dir, "orchestrator.db")
+WHATSAPP_AUTO_REPLY_ENABLED = os.getenv("WHATSAPP_AUTO_REPLY_ENABLED", "false").strip().lower() in {"1", "true", "yes", "on"}
 
 
 
@@ -58,6 +62,9 @@ def _ensure_table():
             ("food_class", "TEXT"),
             ("food_count", "INTEGER"),
             ("location", "TEXT"),
+            ("parsed_confidence", "REAL"),
+            ("parsed_payload", "TEXT"),
+            ("review_status", "TEXT"),
         ]:
             try:
                 conn.execute(f"ALTER TABLE tg_messages ADD COLUMN {col} {col_type}")
@@ -154,6 +161,9 @@ def _detect_recurrence(text: str) -> str:
 def _send_wa_reply(chat_id: str, text: str):
     """Отправляет авто-ответ в WhatsApp через локальный bridge (порт 3000)."""
     import urllib.request, json
+    if not WHATSAPP_AUTO_REPLY_ENABLED:
+        print("[AutoReply] skipped: WHATSAPP_AUTO_REPLY_ENABLED is false")
+        return
     try:
         target_chat_id = resolve_whatsapp_target(chat_id)
         payload = json.dumps({"chatId": target_chat_id, "text": text}).encode('utf-8')
@@ -163,6 +173,29 @@ def _send_wa_reply(chat_id: str, text: str):
             pass
     except Exception as e:
         print(f"[AutoReply] Не удалось отправить: {e}")
+
+def _resolved_assignee(parsed) -> str:
+    return parsed.assignee or parsed.assignee_role or "Нераспознанный сотрудник"
+
+
+def _queue_manual_review(conn, req: WhatsAppWebhookReq, parsed, summary: str):
+    review_reason = parsed.review_reason or "manual_review_required"
+    conn.execute(
+        "INSERT INTO task_reminders (title, assignee, deadline, is_accepted, is_completed) VALUES (?, ?, ?, ?, ?)",
+        (
+            f"Проверить сообщение из WhatsApp: {summary[:80]}",
+            "Завуч",
+            "Сейчас",
+            0,
+            0,
+        ),
+    )
+    _send_wa_reply(
+        req.chatId,
+        "Aqbobek AI: сообщение получено, но требует подтверждения администратора. "
+        f"Причина: {review_reason}. После проверки задача появится в системе.",
+    )
+
 
 # Global state for WA authentication
 wa_auth_state = {
@@ -192,6 +225,152 @@ def get_whatsapp_auth_status():
 def whatsapp_webhook(req: WhatsAppWebhookReq):
     """Принимает сообщения от реального WhatsApp и вставляет в ту же базу."""
     _ensure_table()
+    parsed = parse_with_llm(req.text, sender=req.sender)
+
+    raw_type = parsed.type
+    stored_type = "other" if raw_type == "task" or parsed.is_acceptance else raw_type
+    task_subtype = parsed.recurrence or _detect_recurrence(req.text)
+    summary = parsed.summary
+    if raw_type == "task" and not parsed.is_acceptance:
+        summary = f"[{task_subtype}] {parsed.task_title or parsed.summary}"
+
+    food_class = parsed.class_name
+    food_count = parsed.food_count
+    location = parsed.location or _extract_location(req.text)
+    payload_json = json.dumps(parsed.model_dump(), ensure_ascii=False)
+    review_status = "needs_review" if parsed.requires_review else "approved"
+
+    try:
+        conn = _get_conn()
+        conn.execute(
+            """INSERT INTO tg_messages
+               (chat_id, sender, text, parsed_type, parsed_summary, food_class, food_count, location, parsed_confidence, parsed_payload, review_status)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+            (
+                req.chatId,
+                req.sender,
+                f"[WA] {req.text}",
+                stored_type,
+                summary,
+                food_class,
+                food_count,
+                location,
+                parsed.confidence,
+                payload_json,
+                review_status,
+            ),
+        )
+
+        if parsed.is_acceptance:
+            search_sender = f"%{req.sender}%"
+            cursor = conn.execute(
+                """UPDATE task_reminders
+                   SET is_accepted = 1
+                   WHERE is_completed = 0 AND is_accepted = 0
+                   AND (assignee LIKE ? OR ? LIKE '%' || assignee || '%')
+                   AND id = (
+                       SELECT id FROM task_reminders
+                       WHERE is_completed = 0 AND is_accepted = 0
+                       AND (assignee LIKE ? OR ? LIKE '%' || assignee || '%')
+                       ORDER BY id DESC LIMIT 1
+                   )""",
+                (search_sender, req.sender, search_sender, req.sender),
+            )
+            if cursor.rowcount == 0:
+                conn.execute(
+                    """UPDATE task_reminders
+                       SET is_accepted = 1, assignee = ?
+                       WHERE is_completed = 0 AND is_accepted = 0
+                       AND (assignee LIKE '%РќРµСЂР°СЃРїРѕР·РЅР°РЅРЅС‹Р№%' OR assignee LIKE '%РќРµРёР·РІРµСЃС‚РЅРѕ%' OR assignee = '')
+                       AND id = (
+                           SELECT id FROM task_reminders
+                           WHERE is_completed = 0 AND is_accepted = 0
+                           AND (assignee LIKE '%РќРµСЂР°СЃРїРѕР·РЅР°РЅРЅС‹Р№%' OR assignee LIKE '%РќРµРёР·РІРµСЃС‚РЅРѕ%' OR assignee = '')
+                           ORDER BY id DESC LIMIT 1
+                       )""",
+                    (req.sender,),
+                )
+            conn.commit()
+            conn.close()
+            return {"status": "ok", "parsed_type": "acceptance", "confidence": parsed.confidence}
+
+        if parsed.requires_review and raw_type in {"task", "incident", "absence"}:
+            _queue_manual_review(conn, req, parsed, summary)
+            conn.commit()
+            conn.close()
+            return {
+                "status": "review_required",
+                "parsed_type": stored_type,
+                "confidence": parsed.confidence,
+                "analysis": parsed.model_dump(),
+            }
+
+        if raw_type == "medical":
+            loc_str = f" ({location})" if location else ""
+            _send_wa_reply(
+                req.chatId,
+                f"🚑 Медицинский случай зафиксирован{loc_str}.\n{parsed.summary}\nПроверьте, чтобы медработник или администрация были уведомлены немедленно.",
+            )
+
+        elif raw_type == "incident":
+            assignee = _resolved_assignee(parsed)
+            deadline = parsed.deadline or "Срочно"
+            conn.execute(
+                "INSERT INTO task_reminders (title, assignee, deadline, is_accepted, is_completed) VALUES (?, ?, ?, ?, ?)",
+                (parsed.task_title or parsed.issue or parsed.summary, assignee, deadline, 0, 0),
+            )
+            loc_str = f" ({location})" if location else ""
+            _send_wa_reply(
+                req.chatId,
+                f"🔧 Инцидент зафиксирован{loc_str}.\n{parsed.summary}\nИсполнитель: {assignee}. Срок: {deadline}.",
+            )
+
+        elif raw_type == "absence":
+            db = SessionLocal()
+            try:
+                absence_result = process_teacher_absence_event(
+                    teacher_name=parsed.teacher_name or req.sender,
+                    reason="whatsapp_absence",
+                    source="whatsapp",
+                    raw_message=req.text,
+                    db=db,
+                )
+            finally:
+                db.close()
+
+            reply = build_absence_reply(
+                teacher_name=absence_result.get("teacher_name", parsed.teacher_name or req.sender),
+                day=absence_result.get("day", "сегодня"),
+                substitutions_count=absence_result.get("substitutions_count", 0),
+                unresolved_count=absence_result.get("unresolved_count", 0),
+            )
+            _send_wa_reply(req.chatId, reply)
+
+        elif raw_type == "task" or (stored_type == "other" and (parsed.assignee or parsed.task_title)):
+            assignee = _resolved_assignee(parsed)
+            deadline = parsed.deadline or "В течение дня"
+            conn.execute(
+                "INSERT INTO task_reminders (title, assignee, deadline, is_accepted, is_completed) VALUES (?, ?, ?, ?, ?)",
+                (parsed.task_title or req.text.strip(), assignee, deadline, 0, 0),
+            )
+            subtype_label = "🔁 Цикличная" if task_subtype == "recurring" else "⚡ Разовая"
+            _send_wa_reply(
+                req.chatId,
+                f"Aqbobek AI: задача создана [{subtype_label}].\nИсполнитель: {assignee}\nСрок: {deadline}\n{parsed.task_title or req.text.strip()}",
+            )
+
+        conn.commit()
+        conn.close()
+        return {
+            "status": "ok",
+            "parsed_type": stored_type,
+            "confidence": parsed.confidence,
+            "analysis": parsed.model_dump(),
+        }
+    except Exception as e:
+        print(f"[Webhook LLM Flow] {e}")
+        return {"status": "error", "message": str(e)}
+
     mtype, summary, food_class, food_count = _local_classify(req.text)
     location = _extract_location(req.text)
 
@@ -316,12 +495,22 @@ def get_bot_messages(limit: int = 50):
     try:
         conn = _get_conn()
         rows = conn.execute(
-            "SELECT id, sender, text, parsed_type, parsed_summary, food_class, food_count, created_at "
+            "SELECT id, sender, text, parsed_type, parsed_summary, food_class, food_count, created_at, parsed_confidence, parsed_payload, review_status "
             "FROM tg_messages ORDER BY id DESC LIMIT ?",
             (limit,)
         ).fetchall()
         conn.close()
-        return [dict(r) for r in reversed(rows)]
+        result = []
+        for row in reversed(rows):
+            item = dict(row)
+            payload = item.get("parsed_payload")
+            if payload:
+                try:
+                    item["parsed_payload"] = json.loads(payload)
+                except Exception:
+                    pass
+            result.append(item)
+        return result
     except Exception as e:
         return []
 
@@ -375,6 +564,172 @@ def get_food_svod():
         return {"total_portions": 0, "report_count": 0, "classes": {}, "incidents_today": 0, "absences_today": 0}
 
 
+@router.get("/ops-summary")
+def get_ops_summary(limit: int = 6):
+    """Оперативная сводка для главной панели директора."""
+    _ensure_table()
+    db = SessionLocal()
+    try:
+        raw_events = (
+            db.query(TeacherAbsenceEvent)
+            .order_by(TeacherAbsenceEvent.created_at.desc(), TeacherAbsenceEvent.id.desc())
+            .limit(limit * 4)
+            .all()
+        )
+
+        recent_events = []
+        seen_pairs = set()
+        for event in raw_events:
+            key = (event.teacher_id, event.day)
+            if key in seen_pairs:
+                continue
+            seen_pairs.add(key)
+            recent_events.append(event)
+            if len(recent_events) >= limit:
+                break
+
+        absences = []
+        total_substitutions = 0
+        total_unresolved = 0
+
+        for event in recent_events:
+            substitution_entries = (
+                db.query(ScheduleEntry, TimeSlot, Class, Room)
+                .join(TimeSlot, ScheduleEntry.time_slot_id == TimeSlot.id)
+                .outerjoin(Class, ScheduleEntry.class_id == Class.id)
+                .outerjoin(Room, ScheduleEntry.room_id == Room.id)
+                .filter(
+                    ScheduleEntry.original_teacher_id == event.teacher_id,
+                    ScheduleEntry.is_substitution == True,
+                    TimeSlot.day == event.day,
+                )
+                .order_by(TimeSlot.lesson_number)
+                .all()
+            )
+
+            unresolved_entries = []
+            if (event.unresolved_count or 0) > 0:
+                unresolved_entries = (
+                    db.query(ScheduleEntry, TimeSlot, Class, Room)
+                    .join(TimeSlot, ScheduleEntry.time_slot_id == TimeSlot.id)
+                    .outerjoin(Class, ScheduleEntry.class_id == Class.id)
+                    .outerjoin(Room, ScheduleEntry.room_id == Room.id)
+                    .filter(
+                        ScheduleEntry.teacher_id == event.teacher_id,
+                        TimeSlot.day == event.day,
+                        ScheduleEntry.is_substitution == False,
+                    )
+                    .order_by(TimeSlot.lesson_number)
+                    .all()
+                )
+
+            substitutions_preview = []
+            for entry, slot, class_obj, room_obj in substitution_entries[:3]:
+                substitutions_preview.append(
+                    {
+                        "lesson_number": slot.lesson_number,
+                        "class_name": class_obj.name if class_obj else "—",
+                        "room": room_obj.number if room_obj else "—",
+                        "subject": entry.subject,
+                    }
+                )
+
+            if not substitutions_preview and (event.substitutions_count or 0) > 0:
+                substitutions_preview.append(
+                    {
+                        "lesson_number": 0,
+                        "class_name": f"{event.substitutions_count} слот(а)",
+                        "room": "назначено",
+                        "subject": "Замена проведена",
+                    }
+                )
+
+            unresolved_preview = []
+            for entry, slot, class_obj, room_obj in unresolved_entries[:3]:
+                unresolved_preview.append(
+                    {
+                        "lesson_number": slot.lesson_number,
+                        "class_name": class_obj.name if class_obj else "—",
+                        "room": room_obj.number if room_obj else "—",
+                        "subject": entry.subject,
+                    }
+                )
+
+            if not unresolved_preview and (event.unresolved_count or 0) > 0:
+                unresolved_preview.append(
+                    {
+                        "lesson_number": 0,
+                        "class_name": f"{event.unresolved_count} слот(а)",
+                        "room": "требует решения",
+                        "subject": "Ручная обработка",
+                    }
+                )
+
+            total_substitutions += event.substitutions_count or 0
+            total_unresolved += event.unresolved_count or 0
+            absences.append(
+                {
+                    "event_id": event.id,
+                    "teacher_name": event.teacher.short_name or event.teacher.full_name if event.teacher else "Неизвестно",
+                    "day": event.day,
+                    "status": event.status,
+                    "reason": event.reason,
+                    "source": event.source,
+                    "created_at": event.created_at.isoformat() if event.created_at else None,
+                    "substitutions_count": event.substitutions_count or 0,
+                    "unresolved_count": event.unresolved_count or 0,
+                    "substitutions_preview": substitutions_preview,
+                    "unresolved_preview": unresolved_preview,
+                }
+            )
+
+        pending_tasks = (
+            db.query(TaskReminder)
+            .filter(TaskReminder.is_completed == False)
+            .order_by(TaskReminder.id.desc())
+            .limit(5)
+            .all()
+        )
+
+        pending_incidents = sum(1 for task in pending_tasks if "инцидент" in (task.title or "").lower())
+
+        return {
+            "totals": {
+                "absent_teachers": len(absences),
+                "substitutions_found": total_substitutions,
+                "unresolved_slots": total_unresolved,
+                "pending_tasks": len(pending_tasks),
+                "pending_incidents": pending_incidents,
+            },
+            "absences": absences,
+            "pending_tasks": [
+                {
+                    "id": task.id,
+                    "title": task.title,
+                    "assignee": task.assignee,
+                    "deadline": task.deadline,
+                    "is_accepted": task.is_accepted,
+                }
+                for task in pending_tasks
+            ],
+        }
+    except Exception as e:
+        return {
+            "totals": {
+                "absent_teachers": 0,
+                "substitutions_found": 0,
+                "unresolved_slots": 0,
+                "pending_tasks": 0,
+                "pending_incidents": 0,
+            },
+            "absences": [],
+            "pending_tasks": [],
+            "error": str(e),
+        }
+    finally:
+        db.close()
+
+
 @router.post("/send-food-report")
 def send_food_report():
     """Отправляет свод питания в столовую (симуляция)."""
@@ -403,14 +758,14 @@ def _run_demo_scenario():
     """Засеивает базу цепочкой реалистичных сообщений с задержками."""
     _ensure_table()
     scenario = [
-        ("Абенова Г.", "1А — 24 детей, 1 болеет", "food", "Явка: 24 чел. (1А)", "1А", 24),
-        ("Сейткали М.", "1Б: 22 ребёнка, все на месте", "food", "Явка: 22 чел. (1Б)", "1Б", 22),
-        ("Нурланова Д.", "2А — 26 детей, все пришли", "food", "Явка: 26 чел. (2А)", "2А", 26),
-        ("Касымова А.", "2Б — 23 человека, 2 отсутствуют", "food", "Явка: 23 чел. (2Б)", "2Б", 23),
-        ("Петрова О.", "В кабинете 205 сломался проектор, дети не могут смотреть презентацию", "incident", "Инцидент: сломан проектор в каб.205", None, None),
-        ("Болат С.", "Коллеги, у меня высокая температура. Сегодня не смогу прийти на уроки", "absence", "Отсутствует: Болат С. Требуется замена.", None, None),
-        ("Ержанова К.", "3В — 20 детей, 2 болеют", "food", "Явка: 20 чел. (3В)", "3В", 20),
-        ("Байжанова Д.", "4А — 25 человек, все пришли!", "food", "Явка: 25 чел. (4А)", "4А", 25),
+        ("Айжан Т.", "1А — 26 детей, 1 отсутствует. На питание 25.", "food", "Явка: 25 чел. (1А)", "1А", 25),
+        ("Гульмира С.", "2Б: 24 ученика, все на месте.", "food", "Явка: 24 чел. (2Б)", "2Б", 24),
+        ("Назгуль М.", "3В — 21 ребёнок, двое болеют, на питание 19.", "food", "Явка: 19 чел. (3В)", "3В", 19),
+        ("Айман К.", "Сегодня не выйду, высокая температура, прошу поставить замену на мои уроки.", "absence", "Отсутствие учителя, требуется замена.", None, None),
+        ("Руслан А.", "В кабинете 205 не включается проектор, нужен техспециалист до третьего урока.", "incident", "Инцидент: проектор в кабинете 205", None, None),
+        ("Секретарь", "Распечатайте обновлённое расписание для учительской к 15:00.", "other", "[spontaneous] Распечатать расписание для учительской", None, None),
+        ("Охрана", "После обеда проверьте запасной выход в левом крыле.", "other", "[spontaneous] Проверить запасной выход", None, None),
+        ("Завуч", "К 16:30 подготовить актовый зал к собранию родителей 5-х классов.", "other", "[spontaneous] Подготовить актовый зал", None, None),
     ]
     for sender, text, mtype, summary, cls, cnt in scenario:
         try:

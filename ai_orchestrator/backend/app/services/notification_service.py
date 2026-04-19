@@ -13,6 +13,7 @@ BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
 BASE_TG = f"https://api.telegram.org/bot{BOT_TOKEN}" if BOT_TOKEN else ""
 SCHOOL_BROADCAST_CHAT = int(os.getenv("SCHOOL_CHAT_ID", "0"))
 WHATSAPP_DEMO_CHAT_ID = os.getenv("WHATSAPP_DEMO_CHAT_ID", "").strip()
+WHATSAPP_OUTGOING_ENABLED = os.getenv("WHATSAPP_OUTGOING_ENABLED", "false").strip().lower() in {"1", "true", "yes", "on"}
 
 
 def _send_tg(chat_id: str | int, text: str) -> bool:
@@ -45,6 +46,9 @@ def resolve_whatsapp_target(chat_id: Optional[str]) -> Optional[str]:
 
 
 def _send_whatsapp(chat_id: str, text: str) -> bool:
+    if not WHATSAPP_OUTGOING_ENABLED:
+        log.info("WhatsApp send skipped: WHATSAPP_OUTGOING_ENABLED is false")
+        return False
     chat_id = resolve_whatsapp_target(chat_id)
     if not chat_id:
         return False

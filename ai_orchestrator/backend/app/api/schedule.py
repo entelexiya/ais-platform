@@ -545,17 +545,17 @@ async def get_time_slots(db: Session = Depends(get_db)):
 async def create_lenta_slot_v2(req: LentaCreateRequest, db: Session = Depends(get_db)):
     parallel = db.query(Parallel).get(req.parallel_id)
     if not parallel:
-        raise HTTPException(status_code=404, detail="РџР°СЂР°Р»Р»РµР»СЊ РЅРµ РЅР°Р№РґРµРЅР°")
+        raise HTTPException(status_code=404, detail="Параллель не найдена")
     if not parallel.has_lenta:
-        raise HTTPException(status_code=400, detail="РЈ СЌС‚РѕР№ РїР°СЂР°Р»Р»РµР»Рё РЅРµС‚ СЃРёСЃС‚РµРјС‹ Р»РµРЅС‚")
+        raise HTTPException(status_code=400, detail="У этой параллели нет системы лент")
 
     lenta_groups = db.query(LentaGroup).filter_by(parallel_id=req.parallel_id).all()
     if not lenta_groups:
-        raise HTTPException(status_code=400, detail="РќРµС‚ РіСЂСѓРїРї Р»РµРЅС‚ РґР»СЏ СЌС‚РѕР№ РїР°СЂР°Р»Р»РµР»Рё")
+        raise HTTPException(status_code=400, detail="Нет групп лент для этой параллели")
 
     slot = db.query(TimeSlot).get(req.time_slot_id)
     if not slot:
-        raise HTTPException(status_code=404, detail="Р’СЂРµРјРµРЅРЅРѕР№ СЃР»РѕС‚ РЅРµ РЅР°Р№РґРµРЅ")
+        raise HTTPException(status_code=404, detail="Временной слот не найден")
 
     checker = ConflictChecker(db)
     conflicts = _validate_lenta_groups(lenta_groups)
@@ -573,7 +573,7 @@ async def create_lenta_slot_v2(req: LentaCreateRequest, db: Session = Depends(ge
         .first()
     )
     if existing_lenta:
-        raise HTTPException(status_code=409, detail="Р›РµРЅС‚Р° СѓР¶Рµ СЃРѕР·РґР°РЅР° РІ СЌС‚РѕРј СЃР»РѕС‚Рµ")
+        raise HTTPException(status_code=409, detail="Лента уже создана в этом слоте")
 
     parallel_conflict = (
         db.query(ScheduleEntry)
@@ -589,16 +589,16 @@ async def create_lenta_slot_v2(req: LentaCreateRequest, db: Session = Depends(ge
     for group in lenta_groups:
         if group.teacher_id and not checker.check_teacher_availability(group.teacher_id, req.time_slot_id):
             teacher = db.query(Teacher).get(group.teacher_id)
-            conflicts.append(f"РЈС‡РёС‚РµР»СЊ {teacher.short_name if teacher else '?'} Р·Р°РЅСЏС‚ ({group.group_name})")
+            conflicts.append(f"Учитель {teacher.short_name if teacher else '?'} занят ({group.group_name})")
         if group.room_id and not checker.check_room_availability(group.room_id, req.time_slot_id):
             room = db.query(Room).get(group.room_id)
-            conflicts.append(f"РљР°Р±РёРЅРµС‚ {room.number if room else '?'} Р·Р°РЅСЏС‚ ({group.group_name})")
+            conflicts.append(f"Кабинет {room.number if room else '?'} занят ({group.group_name})")
 
     if conflicts:
         return {
             "ok": False,
             "conflicts": conflicts,
-            "message": "РћР±РЅР°СЂСѓР¶РµРЅС‹ РєРѕРЅС„Р»РёРєС‚С‹ вЂ” Р»РµРЅС‚Р° РЅРµ СЃРѕР·РґР°РЅР°",
+            "message": "Обнаружены конфликты — лента не создана",
         }
 
     created_entries = {"class_blocks": [], "groups": []}
@@ -610,7 +610,7 @@ async def create_lenta_slot_v2(req: LentaCreateRequest, db: Session = Depends(ge
                 teacher_id=None,
                 room_id=None,
                 time_slot_id=req.time_slot_id,
-                subject=parallel.lenta_subject or "РђРЅРіР»РёР№СЃРєРёР№ СЏР·С‹Рє",
+                subject=parallel.lenta_subject or "Английский язык",
                 is_lenta=True,
                 lenta_group_id=None,
             )
@@ -624,7 +624,7 @@ async def create_lenta_slot_v2(req: LentaCreateRequest, db: Session = Depends(ge
                 teacher_id=group.teacher_id,
                 room_id=group.room_id,
                 time_slot_id=req.time_slot_id,
-                subject=parallel.lenta_subject or "РђРЅРіР»РёР№СЃРєРёР№ СЏР·С‹Рє",
+                subject=parallel.lenta_subject or "Английский язык",
                 is_lenta=True,
                 lenta_group_id=group.id,
             )
@@ -641,7 +641,7 @@ async def create_lenta_slot_v2(req: LentaCreateRequest, db: Session = Depends(ge
 
     return {
         "ok": True,
-        "message": f"Р›РµРЅС‚Р° СЃРѕР·РґР°РЅР°: {slot.day} СѓСЂРѕРє {slot.lesson_number} вЂ” {len(lenta_groups)} РіСЂСѓРїРї, {len(parallel.classes)} РєР»Р°СЃСЃРѕРІ Р·Р°Р±Р»РѕРєРёСЂРѕРІР°РЅС‹",
+        "message": f"Лента создана: {slot.day} урок {slot.lesson_number} — {len(lenta_groups)} групп, {len(parallel.classes)} классов заблокированы",
         "slot": f"{slot.day} {slot.start_time}",
         "groups_created": len(lenta_groups),
         "class_blocks_created": len(parallel.classes),

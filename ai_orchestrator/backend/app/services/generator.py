@@ -1,4 +1,5 @@
 import json
+import random
 import re
 from collections import defaultdict
 from typing import Dict, List, Optional, Tuple
@@ -424,6 +425,7 @@ def _choose_subject_for_slot(
         if subject == "Классный час" and day == "Пятница" and lesson >= 5:
             score += 10
 
+        score += random.uniform(-2.5, 2.5)
         scored.append((score, subject))
 
     scored.sort(key=lambda item: (-item[0], item[1]))
@@ -641,12 +643,8 @@ def generate_weekly_schedule(
             daily_teacher_load,
         ) = _build_existing_occupancy(db)
 
-        teachers = (
-            db.query(Teacher)
-            .filter(Teacher.role == "Учитель")
-            .order_by(Teacher.short_name)
-            .all()
-        )
+        teachers = db.query(Teacher).filter(Teacher.role == "Учитель").all()
+        random.shuffle(teachers)
         rooms = db.query(Room).order_by(Room.capacity.desc(), Room.number).all()
 
         generated_schedule: List[Dict] = []

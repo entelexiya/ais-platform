@@ -87,8 +87,8 @@ PARALLELS_DATA = [
 LENTA_GROUPS_3 = [
     {"group_name": "Beginner", "level": 1, "teacher_short": "Касенова А.", "room_number": "201"},
     {"group_name": "Pre-Intermediate", "level": 2, "teacher_short": "Джаксыбекова Д.", "room_number": "202"},
-    {"group_name": "Intermediate", "level": 3, "teacher_short": "Касенова А.", "room_number": "203"},
-    {"group_name": "Upper-Intermediate", "level": 4, "teacher_short": "Джаксыбекова Д.", "room_number": "204"},
+    {"group_name": "Intermediate", "level": 3, "teacher_short": "Ермекова А.", "room_number": "203"},
+    {"group_name": "Upper-Intermediate", "level": 4, "teacher_short": "Байтурсынова М.", "room_number": "204"},
 ]
 
 # Лента для 5-й параллели

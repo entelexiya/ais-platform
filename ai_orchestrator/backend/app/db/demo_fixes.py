@@ -27,8 +27,8 @@ LENTA_ASSIGNMENTS = {
     3: [
         ("Beginner", "Касенова А.", "201"),
         ("Pre-Intermediate", "Джаксыбекова Д.", "202"),
-        ("Intermediate", "Касенова А.", "203"),
-        ("Upper-Intermediate", "Джаксыбекова Д.", "204"),
+        ("Intermediate", "Ермекова А.", "203"),
+        ("Upper-Intermediate", "Байтурсынова М.", "204"),
     ],
     5: [
         ("Beginner", "Касенова А.", "201"),
@@ -62,21 +62,37 @@ def apply_demo_fixes(db: Session) -> None:
     for grade, assignments in LENTA_ASSIGNMENTS.items():
         parallel = db.query(Parallel).filter_by(grade=grade).first()
         if not parallel:
-            continue
+            parallel = Parallel(grade=grade, has_lenta=True, lenta_subject="Английский язык")
+            db.add(parallel)
+            db.flush()
+        else:
+            parallel.has_lenta = True
+            if not parallel.lenta_subject:
+                parallel.lenta_subject = "Английский язык"
         for group_name, teacher_short, room_number in assignments:
             group = (
                 db.query(LentaGroup)
                 .filter_by(parallel_id=parallel.id, group_name=group_name)
                 .first()
             )
-            if not group:
-                continue
             teacher = teacher_map.get(teacher_short)
             room = room_map.get(room_number)
-            if teacher:
-                group.teacher_id = teacher.id
-            if room:
-                group.room_id = room.id
+            if not group:
+                level = list(dict.fromkeys(a[0] for a in assignments)).index(group_name) + 1
+                group = LentaGroup(
+                    parallel_id=parallel.id,
+                    group_name=group_name,
+                    level=level,
+                    teacher_id=teacher.id if teacher else None,
+                    room_id=room.id if room else None,
+                )
+                db.add(group)
+                db.flush()
+            else:
+                if teacher:
+                    group.teacher_id = teacher.id
+                if room:
+                    group.room_id = room.id
 
     invalid_lenta_entries = (
         db.query(ScheduleEntry)
