@@ -1,0 +1,57 @@
+[
+    {
+        "id": 1,
+        "input": "В 3Б классе отсутствует 2 человека по болезни, все остальные на месте",
+        "expected_agent_type": "attendance",
+        "parsed_data": {
+            "class": "3Б",
+            "absent_count": 2,
+            "reason": "по болезни",
+            "urgency": "normal"
+        }
+    },
+    {
+        "id": 2,
+        "input": "В спортзале сломалось баскетбольное кольцо",
+        "expected_agent_type": "incident",
+        "parsed_data": {
+            "location": "спортзал",
+            "issue": "сломалось баскетбольное кольцо",
+            "urgency": "high"
+        }
+    },
+    {
+        "id": 3,
+        "input": "Учитель физики Искаков ушел на больничный, нужна замена на 3 урок в 10А",
+        "expected_agent_type": "substitution",
+        "parsed_data": {
+            "absent_teacher": "Искаков",
+            "subject": "физика",
+            "lesson": 3,
+            "class": "10А",
+            "urgency": "critical"
+        }
+    },
+    {
+        "id": 4,
+        "input": "В 1А классе сегодня кушают 28 детей из 30",
+        "expected_agent_type": "food",
+        "parsed_data": {
+            "class": "1А",
+            "food_count": 28,
+            "total_count": 30,
+            "urgency": "normal"
+        }
+    },
+    {
+        "id": 5,
+        "input": "Девочке плохо в 201 кабинете, срочно врача",
+        "expected_agent_type": "medical",
+        "parsed_data": {
+            "location": "201 кабинет",
+            "issue": "Девочке плохо",
+            "requires_doctor": true,
+            "urgency": "critical"
+        }
+    }
+]

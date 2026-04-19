@@ -1,0 +1,9 @@
+[
+  {"day": "Вторник", "lesson": 1, "class": "4Б", "room": "303", "teacher": "Болат", "subject": "Математика"},
+  {"day": "Вторник", "lesson": 2, "class": "4Б", "room": "303", "teacher": "Болат", "subject": "Математика"},
+  {"day": "Вторник", "lesson": 2, "class": "6А", "room": "306", "teacher": "Петрова Ольга", "subject": "Математика"},
+  {"day": "Вторник", "lesson": 3, "class": "6А", "room": "202", "teacher": "Касенова Амина", "subject": "Английский язык"},
+  {"day": "Вторник", "lesson": 3, "class": "9Б", "room": "405", "teacher": "Нуров Азамат", "subject": "Физика"},
+  {"day": "Вторник", "lesson": 3, "class": "8А", "room": "302", "teacher": null, "subject": "Свободное окно (Байжанов Д.)"},
+  {"day": "Вторник", "lesson": 4, "class": "10А", "room": "103", "teacher": "Байжанов Д.", "subject": "Информатика"}
+]

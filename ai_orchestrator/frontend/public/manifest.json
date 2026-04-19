@@ -1,0 +1,23 @@
+{
+  "name": "AIS AI-Оркестратор",
+  "short_name": "AIS",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#1f1633",
+  "theme_color": "#1f1633",
+  "description": "Автоматизация школьных процессов и делегирование задач",
+  "icons": [
+    {
+      "src": "/school_crest.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/school_crest.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
