@@ -198,10 +198,19 @@ def _serialize_preview(
         "subject": lesson.subject,
         "status": status_msg,
         "match_type": candidate_info["match_type"] if candidate_info else None,
+        "load": {
+            "daily": candidate_info["daily_load"] if candidate_info else None,
+            "weekly": candidate_info["weekly_load"] if candidate_info else None,
+            "max_weekly": substitute_teacher.max_hours_per_week if substitute_teacher else None,
+        },
         "checks": {
             "time_free": bool(substitute_teacher),
             "qual_match": bool(candidate_info and candidate_info["subject_rank"] <= 3),
             "admin_fallback": bool(candidate_info and candidate_info["is_admin_fallback"]),
+            "load_ok": bool(
+                candidate_info and
+                (candidate_info["weekly_load"] or 0) < (substitute_teacher.max_hours_per_week if substitute_teacher else 20)
+            ),
         },
         "was_became_table": (
             f"Было: {absent_teacher.short_name or absent_teacher.full_name} → Стало: {substitute_name}"

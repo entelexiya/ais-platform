@@ -33,6 +33,17 @@ interface AbsenceResolutionItem {
     telegram_sent?: boolean;
     whatsapp_sent?: boolean;
   };
+  checks?: {
+    time_free?: boolean;
+    qual_match?: boolean;
+    admin_fallback?: boolean;
+    load_ok?: boolean;
+  };
+  load?: {
+    daily?: number | null;
+    weekly?: number | null;
+    max_weekly?: number | null;
+  };
   rejected_candidates?: { name: string; reason: string }[];
 }
 
@@ -1487,8 +1498,8 @@ const [dbTasks, setDbTasks] = useState<any[]>([]);
                         <MessageSquare size={18} className="text-white" />
                       </div>
                       <div>
-                        <div className="font-black text-white text-sm">LIVE: Telegram-лента</div>
-                        <div className="text-xs text-white/40 font-medium">Реальные сообщения от учителей • обновляется каждые 4 сек</div>
+                        <div className="font-black text-white text-sm">Лента событий</div>
+                        <div className="text-xs text-white/40 font-medium">AI-парсинг входящих сообщений • обновляется каждые 4 сек</div>
                       </div>
                     </div>
                     <div className="flex items-center gap-4">
@@ -1510,7 +1521,13 @@ const [dbTasks, setDbTasks] = useState<any[]>([]);
                     </div>
                   </div>
                   <div className="divide-y divide-white/5 max-h-80 overflow-y-auto">
-                    {botFeed.map((msg, i) => {
+                    {botFeed.filter((msg, i, arr) => {
+                      // показываем только последнее сообщение от каждого отправителя по каждому типу
+                      const lastIdx = arr.map((m, j) => ({ m, j }))
+                        .filter(({ m }) => m.sender === msg.sender && m.parsed_type === msg.parsed_type)
+                        .slice(-1)[0]?.j;
+                      return i === lastIdx;
+                    }).map((msg, i) => {
                       const typeColors: Record<string,string> = {
                         food: 'bg-emerald-50 text-emerald-700 border-emerald-100',
                         absence: 'bg-rose-50 text-rose-700 border-rose-100',
@@ -1988,27 +2005,46 @@ const [dbTasks, setDbTasks] = useState<any[]>([]);
                               </div>
                             </div>
 
-                            <div className="bg-white/5 rounded-2xl border border-white/10 p-4 min-w-[260px]">
-                              <div className="text-[10px] font-black text-blue-300 uppercase tracking-widest mb-2">Результат подбора</div>
-                              <div className="text-sm font-semibold text-white/80 leading-relaxed">{item.status}</div>
-                              <div className="flex flex-wrap gap-2 mt-4">
-                                <span className="text-[10px] font-black px-2.5 py-1 rounded-full bg-emerald-400/10 text-emerald-300 border border-emerald-400/20">
-                                  applied
-                                </span>
-                                {item.notification?.telegram_sent && (
-                                  <span className="text-[10px] font-black px-2.5 py-1 rounded-full bg-blue-500/10 text-blue-300 border border-blue-400/20">
-                                    telegram sent
-                                  </span>
+                            <div className="bg-white/5 rounded-2xl border border-white/10 p-4 min-w-[280px] space-y-3">
+                              <div className="text-[10px] font-black text-blue-300 uppercase tracking-widest">Проверки ИИ • Приказ МОН №110</div>
+                              <div className="space-y-1.5">
+                                {[
+                                  { label: 'Слот свободен', ok: item.checks?.time_free },
+                                  { label: 'Предмет соответствует', ok: item.checks?.qual_match },
+                                  { label: 'Нагрузка в норме', ok: item.checks?.load_ok ?? true },
+                                ].map(({ label, ok }) => (
+                                  <div key={label} className="flex items-center gap-2 text-xs">
+                                    <span className={ok ? 'text-emerald-400' : 'text-red-400'}>{ok ? '✓' : '✗'}</span>
+                                    <span className={ok ? 'text-white/70' : 'text-red-300/70'}>{label}</span>
+                                  </div>
+                                ))}
+                                {item.load?.weekly != null && (
+                                  <div className="mt-2 pt-2 border-t border-white/8">
+                                    <div className="text-[10px] text-white/40 mb-1">Нагрузка заменяющего</div>
+                                    <div className="flex items-center gap-2">
+                                      <div className="flex-1 h-1.5 bg-white/10 rounded-full overflow-hidden">
+                                        <div
+                                          className={`h-full rounded-full transition-all ${(item.load.weekly / (item.load.max_weekly || 20)) > 0.8 ? 'bg-rose-400' : 'bg-emerald-400'}`}
+                                          style={{ width: `${Math.min((item.load.weekly / (item.load.max_weekly || 20)) * 100, 100)}%` }}
+                                        />
+                                      </div>
+                                      <span className="text-[11px] font-black text-white/60 shrink-0">
+                                        {item.load.weekly}/{item.load.max_weekly ?? 20} ч/нед
+                                      </span>
+                                    </div>
+                                    <div className="text-[10px] text-white/35 mt-0.5">
+                                      Сегодня: {item.load.daily ?? 0} уроков
+                                    </div>
+                                  </div>
                                 )}
-                                {item.notification?.whatsapp_sent && (
-                                  <span className="text-[10px] font-black px-2.5 py-1 rounded-full bg-green-500/10 text-green-300 border border-green-400/20">
-                                    whatsapp sent
-                                  </span>
+                              </div>
+                              <div className="flex flex-wrap gap-1.5 pt-1">
+                                <span className="text-[10px] font-black px-2.5 py-1 rounded-full bg-emerald-400/10 text-emerald-300 border border-emerald-400/20">✓ внесено</span>
+                                {item.notification?.telegram_sent && (
+                                  <span className="text-[10px] font-black px-2.5 py-1 rounded-full bg-blue-500/10 text-blue-300 border border-blue-400/20">уведомлён</span>
                                 )}
                                 {!item.notification?.telegram_sent && !item.notification?.whatsapp_sent && (
-                                  <span className="text-[10px] font-black px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-300 border border-amber-400/20">
-                                    queued
-                                  </span>
+                                  <span className="text-[10px] font-black px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-300 border border-amber-400/20">queued</span>
                                 )}
                               </div>
                             </div>
