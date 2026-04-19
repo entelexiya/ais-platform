@@ -1766,9 +1766,14 @@ const [dbTasks, setDbTasks] = useState<any[]>([]);
 
                     {/* Column 2: Operational events */}
                     {(() => {
-                      const spontaneous = [...botFeed].reverse().filter((m: any) =>
-                        ['food', 'absence', 'medical', 'incident'].includes(m.parsed_type)
-                      );
+                      // дедупликация: последнее сообщение каждого типа от каждого отправителя
+                      const spontaneous = [...botFeed]
+                        .reverse()
+                        .filter((m: any) => ['food', 'absence', 'medical', 'incident'].includes(m.parsed_type))
+                        .filter((m: any, i: number, arr: any[]) => {
+                          const key = `${m.sender}__${m.parsed_type}`;
+                          return arr.findIndex((x: any) => `${x.sender}__${x.parsed_type}` === key) === i;
+                        });
                       const typeConfig: Record<string, {color: string, label: string}> = {
                         food:     { color: 'bg-amber-100 text-amber-700',   label: '🍽 Питание' },
                         absence:  { color: 'bg-rose-100 text-rose-700',     label: '🤒 Отсутствие' },

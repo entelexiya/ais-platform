@@ -498,13 +498,20 @@ def whatsapp_webhook(req: WhatsAppWebhookReq):
 
 @router.get("/messages")
 def get_bot_messages(limit: int = 50):
-    """Последние сообщения от учителей из Telegram-бота или WhatsApp."""
+    """Последние сообщения от учителей — дедупликация по (sender, parsed_type)."""
     _ensure_table()
     try:
         conn = _get_conn()
+        # Берём последнее сообщение от каждого отправителя по каждому типу
         rows = conn.execute(
-            "SELECT id, sender, text, parsed_type, parsed_summary, food_class, food_count, created_at, parsed_confidence, parsed_payload, review_status "
-            "FROM tg_messages ORDER BY id DESC LIMIT ?",
+            """SELECT id, sender, text, parsed_type, parsed_summary, food_class, food_count,
+                      created_at, parsed_confidence, parsed_payload, review_status
+               FROM tg_messages
+               WHERE id IN (
+                   SELECT MAX(id) FROM tg_messages
+                   GROUP BY sender, parsed_type
+               )
+               ORDER BY id DESC LIMIT ?""",
             (limit,)
         ).fetchall()
         conn.close()
