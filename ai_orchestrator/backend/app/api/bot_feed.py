@@ -11,7 +11,7 @@ from datetime import datetime
 from app.db.database import SessionLocal
 from app.db.models import TeacherAbsenceEvent, ScheduleEntry, TimeSlot, Class, Room, TaskReminder
 from app.ai.llm_parser import parse_with_llm
-from app.services.notification_service import build_absence_reply, resolve_whatsapp_target
+from app.services.notification_service import build_absence_reply, resolve_whatsapp_target, send_to_school_group
 from app.services.scheduler import process_teacher_absence_event
 
 router = APIRouter()
@@ -315,23 +315,22 @@ def whatsapp_webhook(req: WhatsAppWebhookReq):
 
         if raw_type == "medical":
             loc_str = f" ({location})" if location else ""
-            _send_wa_reply(
-                req.chatId,
-                f"🚑 Медицинский случай зафиксирован{loc_str}.\n{parsed.summary}\nПроверьте, чтобы медработник или администрация были уведомлены немедленно.",
-            )
+            msg = f"🚑 *Медицинский случай{loc_str}*\n{parsed.summary}\nТребуется немедленное внимание администрации."
+            _send_wa_reply(req.chatId, msg)
+            send_to_school_group(msg)
 
         elif raw_type == "incident":
             assignee = _resolved_assignee(parsed)
             deadline = parsed.deadline or "Срочно"
+            task_title = parsed.task_title or parsed.issue or parsed.summary
             conn.execute(
                 "INSERT INTO task_reminders (title, assignee, deadline, is_accepted, is_completed) VALUES (?, ?, ?, ?, ?)",
-                (parsed.task_title or parsed.issue or parsed.summary, assignee, deadline, 0, 0),
+                (task_title, assignee, deadline, 0, 0),
             )
             loc_str = f" ({location})" if location else ""
-            _send_wa_reply(
-                req.chatId,
-                f"🔧 Инцидент зафиксирован{loc_str}.\n{parsed.summary}\nИсполнитель: {assignee}. Срок: {deadline}.",
-            )
+            msg = f"🔧 *Инцидент{loc_str}*\n{parsed.summary}\nИсполнитель: *{assignee}*. Срок: {deadline}."
+            _send_wa_reply(req.chatId, msg)
+            send_to_school_group(msg)
 
         elif raw_type == "absence":
             db = SessionLocal()
@@ -352,20 +351,21 @@ def whatsapp_webhook(req: WhatsAppWebhookReq):
                 substitutions_count=absence_result.get("substitutions_count", 0),
                 unresolved_count=absence_result.get("unresolved_count", 0),
             )
+            # Групповое уведомление уже отправляется внутри process_teacher_absence_event
             _send_wa_reply(req.chatId, reply)
 
         elif raw_type == "task" or (stored_type == "other" and (parsed.assignee or parsed.task_title)):
             assignee = _resolved_assignee(parsed)
             deadline = parsed.deadline or "В течение дня"
+            task_title = parsed.task_title or req.text.strip()
             conn.execute(
                 "INSERT INTO task_reminders (title, assignee, deadline, is_accepted, is_completed) VALUES (?, ?, ?, ?, ?)",
-                (parsed.task_title or req.text.strip(), assignee, deadline, 0, 0),
+                (task_title, assignee, deadline, 0, 0),
             )
             subtype_label = "🔁 Цикличная" if task_subtype == "recurring" else "⚡ Разовая"
-            _send_wa_reply(
-                req.chatId,
-                f"Aqbobek AI: задача создана [{subtype_label}].\nИсполнитель: {assignee}\nСрок: {deadline}\n{parsed.task_title or req.text.strip()}",
-            )
+            msg = f"📋 *Новая задача [{subtype_label}]*\nИсполнитель: *{assignee}*\nСрок: {deadline}\n{task_title}"
+            _send_wa_reply(req.chatId, msg)
+            send_to_school_group(msg)
 
         conn.commit()
         conn.close()

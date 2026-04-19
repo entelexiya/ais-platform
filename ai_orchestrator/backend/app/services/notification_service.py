@@ -168,6 +168,14 @@ def dispatch_substitution_notification(
     }
 
 
+def send_to_school_group(text: str) -> bool:
+    """Отправляет сообщение в школьную WhatsApp-группу (WHATSAPP_DEMO_CHAT_ID)."""
+    if not WHATSAPP_DEMO_CHAT_ID:
+        return False
+    plain = text.replace("<b>", "*").replace("</b>", "*").replace("<i>", "_").replace("</i>", "_")
+    return _send_whatsapp(WHATSAPP_DEMO_CHAT_ID, plain)
+
+
 def dispatch_director_alert(db: Session, text: str) -> Dict:
     director = (
         db.query(Teacher)

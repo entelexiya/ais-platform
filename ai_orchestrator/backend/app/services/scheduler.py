@@ -10,6 +10,7 @@ from app.services.conflict_checker import ConflictChecker
 from app.services.notification_service import (
     dispatch_director_alert,
     dispatch_substitution_notification,
+    send_to_school_group,
 )
 
 DAY_SEQUENCE = ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница"]
@@ -380,6 +381,22 @@ def process_teacher_absence_event(
         )
 
         db.commit()
+
+        # Групповое уведомление в школьный WhatsApp-чат
+        teacher_label = absent_teacher.short_name or absent_teacher.full_name
+        if substitutions:
+            lines = [f"📢 *Замена на {resolved_day}*\nОтсутствует: *{teacher_label}*\n"]
+            for s in substitutions:
+                lines.append(
+                    f"• Урок {s['lesson_number']} | {s['class_name']} | {s['subject']}\n"
+                    f"  Заменяет: *{s['substitute_teacher']}* (каб. {s['room']})"
+                )
+            send_to_school_group("\n".join(lines))
+        elif unresolved:
+            send_to_school_group(
+                f"⚠️ *Отсутствие: {teacher_label}* ({resolved_day})\n"
+                f"Замена не найдена для {len(unresolved)} уроков. Требуется ручное назначение."
+            )
 
         return {
             "status": absence_event.status,
