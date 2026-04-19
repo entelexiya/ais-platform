@@ -448,55 +448,43 @@ function TeacherScreen({ onBack }: { onBack: () => void }) {
 // --- TASK CARD COMPONENT (3-STAGE SYSTEM) ---
 function TaskCard({ task, idx, stage, onMarkDone }: { task: any, idx: number, stage: 'request' | 'progress' | 'completed', onMarkDone: (id: number) => void }) {
   const urgencyMap: Record<string, string> = {
-    'Сегодня': 'bg-rose-50 text-rose-600 border-rose-100',
-    'Срочно': 'bg-rose-50 text-rose-600 border-rose-100',
-    'Завтра': 'bg-amber-50 text-amber-600 border-amber-100',
-    'Среда': 'bg-blue-50 text-blue-600 border-blue-100',
-    'Пятница': 'bg-blue-50 text-blue-600 border-blue-100',
+    'Сегодня': 'text-rose-400 bg-rose-500/10',
+    'Срочно': 'text-rose-400 bg-rose-500/10',
+    'Завтра': 'text-amber-400 bg-amber-500/10',
+    'Среда': 'text-blue-400 bg-blue-500/10',
+    'Пятница': 'text-blue-400 bg-blue-500/10',
   };
-  const urgencyColor = urgencyMap[task.deadline] || 'bg-white/5 text-white/60 border-white/8';
+  const urgencyColor = urgencyMap[task.deadline] || 'text-white/40 bg-white/5';
   const initials = task.assignee?.split(' ').map((w: string) => w[0]).join('').slice(0, 2).toUpperCase() || '??';
-  const avatarColors: Record<string, string> = {
-    request: 'bg-amber-100 text-amber-600 border-amber-200',
-    progress: 'bg-blue-500 text-white shadow-lg shadow-blue-500/30',
-    completed: 'bg-white/8 text-white/40 grayscale'
-  };
 
   return (
-    <div className={`group relative transition-all duration-500 ${stage === 'completed' ? 'opacity-60 grayscale-[0.5]' : ''}`}>
-      <div className={`bg-[#2a1f42] rounded-2xl p-5 flex items-center gap-5 border group-hover:-translate-y-1 transition-all ${
-        stage === 'request' ? 'border-amber-500/30' :
-        stage === 'progress' ? 'border-blue-500/30' :
-        'border-white/8'
-      }`}>
-        {/* Avatar / Icon Section */}
-        <div className={`w-14 h-14 rounded-2xl flex items-center justify-center font-black text-sm shrink-0 border-2 transition-all ${avatarColors[stage]}`}>
-           {stage === 'completed' ? <CheckCircle2 className="w-7 h-7" /> : initials}
-        </div>
-
-        {/* Content Section */}
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-3">
-             <div className={`font-semibold text-base truncate ${stage === 'completed' ? 'text-white/30 line-through' : 'text-white'}`}>{task.title}</div>
-             {stage === 'request' && <span className="text-[9px] font-black uppercase text-amber-500 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-100 animate-pulse">Ожидает подтверждения</span>}
-             {stage === 'progress' && <span className="text-[9px] font-black uppercase text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-100">В работе</span>}
-          </div>
-          <div className="flex items-center gap-4 mt-1.5 overflow-hidden">
-             <span className="text-xs font-bold text-white/40 flex items-center gap-1 shrink-0"><Users size={12} className="opacity-40" /> {task.assignee}</span>
-             <span className={`text-[10px] font-black uppercase px-2.5 py-1 rounded-lg border flex items-center gap-1 shrink-0 ${urgencyColor}`}><Clock size={10} /> {task.deadline}</span>
-          </div>
-        </div>
-
-        {/* Actions Section */}
-        {stage !== 'completed' && (
-          <button 
-            onClick={() => onMarkDone(task.id)}
-            className="flex items-center gap-2 bg-[#c2ef4e]/15 hover:bg-[#c2ef4e]/25 text-[#c2ef4e] text-[10px] font-bold uppercase tracking-widest px-5 py-3 rounded-xl transition-all active:scale-95 opacity-0 group-hover:opacity-100 border border-[#c2ef4e]/30"
-          >
-            Завершить
-          </button>
-        )}
+    <div className={`group bg-[#1a1330] rounded-xl p-4 border transition-all hover:-translate-y-0.5 cursor-default ${
+      stage === 'request' ? 'border-amber-500/25 hover:border-amber-500/50' :
+      stage === 'progress' ? 'border-blue-500/25 hover:border-blue-500/50' :
+      'border-white/6 opacity-55'
+    }`}>
+      <div className={`text-sm font-semibold leading-snug mb-3 ${stage === 'completed' ? 'text-white/30 line-through' : 'text-white/90'}`}>
+        {task.title}
       </div>
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <div className={`w-6 h-6 rounded-lg flex items-center justify-center text-[10px] font-black shrink-0 ${
+            stage === 'request' ? 'bg-amber-400/20 text-amber-300' :
+            stage === 'progress' ? 'bg-blue-500 text-white' :
+            'bg-white/8 text-white/30'
+          }`}>{stage === 'completed' ? '✓' : initials}</div>
+          <span className="text-[11px] text-white/40 font-medium truncate max-w-[80px]">{task.assignee}</span>
+        </div>
+        <span className={`text-[10px] font-black px-2 py-0.5 rounded-md ${urgencyColor}`}>{task.deadline}</span>
+      </div>
+      {stage !== 'completed' && (
+        <button
+          onClick={() => onMarkDone(task.id)}
+          className="mt-3 w-full text-[10px] font-bold text-[#c2ef4e]/70 hover:text-[#c2ef4e] hover:bg-[#c2ef4e]/10 py-1.5 rounded-lg transition-all opacity-0 group-hover:opacity-100 border border-transparent hover:border-[#c2ef4e]/20"
+        >
+          Отметить выполненным
+        </button>
+      )}
     </div>
   );
 }
@@ -1265,63 +1253,33 @@ const [dbTasks, setDbTasks] = useState<any[]>([]);
           {activeTab === 'chat' && (
             <div className="max-w-4xl mx-auto flex flex-col space-y-8">
               
-              {/* Module 1: Daily Attendance Summary */}
-              <div className="bg-gradient-to-r from-[#2a1f42] to-[#1f1633] border border-[#c2ef4e]/20 rounded-2xl p-6 shadow-xl relative overflow-hidden group">
-                 <div className="absolute -bottom-2 right-4 pointer-events-none z-0 animate-bounce" style={{ animationDuration: '4s' }}>
-                    {/* removed mascot image */}
-                 </div>
-                 <div className="flex items-center justify-between relative z-10">
-                    <div>
-                       <div className="flex items-center space-x-2 text-[#c2ef4e]/70 font-bold uppercase tracking-widest text-xs mb-3">
-                          <Clock className="w-4 h-4" /> <span>Ежедневный Свод (09:00 AM)</span>
-                       </div>
-                       <h3 className="text-3xl font-black mb-1 text-white">Свод по питанию</h3>
-                       <p className="text-white/50 font-medium">
-                         {svod && svod.report_count > 0
-                           ? `Получено ${svod.report_count} отчётов из Telegram-бота`
-                           : 'Данные из Telegram-бота школы'}
-                       </p>
-                    </div>
-                    <div className="text-right">
-                       <div className="text-5xl font-black leading-none">
-                         {svod && svod.total_portions > 0 ? svod.total_portions : calculateAttendanceTotals().totalChildren}
-                       </div>
-                       <div className="text-sm font-bold text-blue-100 mt-1 uppercase tracking-widest">Порций всего</div>
-                    </div>
-                 </div>
-                 <div className="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-4 border-t border-white/20 pt-6 relative z-10">
-                    <div className="flex items-center space-x-3 bg-white/10 p-4 rounded-3xl">
-                       <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center font-black">
-                         {svod ? svod.report_count : messages.filter(m => m.text.includes('детей')).length}
-                       </div>
-                       <div className="text-xs font-bold text-blue-50">Отчётов от классов</div>
-                    </div>
-                    <div className="flex items-center space-x-3 bg-blue-400/20 p-4 rounded-3xl border border-blue-300/20">
-                       <div className="w-10 h-10 bg-rose-500/40 rounded-full flex items-center justify-center font-black text-white">
-                         {svod ? svod.absences_today : 0}
-                       </div>
-                       <div className="text-xs font-bold text-blue-100">Отсутствий (учителя)</div>
-                    </div>
-                    <div className="flex items-center space-x-3 bg-orange-400/20 p-4 rounded-3xl border border-orange-300/20">
-                       <div className="w-10 h-10 bg-orange-500/40 rounded-full flex items-center justify-center font-black text-white">
-                         {svod ? svod.incidents_today : 0}
-                       </div>
-                       <div className="text-xs font-bold text-orange-100">Инцидентов</div>
-                    </div>
-                 </div>
-                 <div className="mt-4 relative z-10">
-                   <button
-                     onClick={async () => {
-                       try {
-                         const r = await axios.post(`${API_BASE}/bot/send-food-report`);
-                         if (r.data.sent) alert(`✅ Свод отправлен в столовую!\n${r.data.report.total_portions} порций на ${r.data.report.date}`);
-                       } catch { alert('Ошибка при отправке свода'); }
-                     }}
-                     className="px-5 py-2 bg-[#c2ef4e] text-[#1f1633] rounded-xl font-bold text-sm hover:bg-[#a8d63a] transition-all"
-                   >
-                     📤 Отправить в столовую
-                   </button>
-                 </div>
+              {/* Svod strip */}
+              <div className="flex flex-wrap items-center gap-3 bg-[#2a1f42] border border-white/8 rounded-2xl px-5 py-4">
+                <div className="flex items-center gap-2 text-[#c2ef4e]/60 text-xs font-bold uppercase tracking-widest mr-2">
+                  <Clock className="w-3.5 h-3.5" /> Свод 09:00
+                </div>
+                {[
+                  { label: 'Порций', value: svod?.total_portions > 0 ? svod.total_portions : calculateAttendanceTotals().totalChildren, accent: 'text-[#c2ef4e]' },
+                  { label: 'Отчётов', value: svod?.report_count ?? messages.filter(m => m.text.includes('детей')).length, accent: 'text-blue-300' },
+                  { label: 'Отсутствий', value: svod?.absences_today ?? 0, accent: 'text-rose-300' },
+                  { label: 'Инцидентов', value: svod?.incidents_today ?? 0, accent: 'text-amber-300' },
+                ].map((s, i) => (
+                  <div key={i} className="flex items-center gap-2 bg-white/5 px-4 py-2 rounded-xl border border-white/8">
+                    <span className={`text-xl font-black ${s.accent}`}>{s.value}</span>
+                    <span className="text-[11px] text-white/40 font-semibold">{s.label}</span>
+                  </div>
+                ))}
+                <button
+                  onClick={async () => {
+                    try {
+                      const r = await axios.post(`${API_BASE}/bot/send-food-report`);
+                      if (r.data.sent) alert(`✅ Отправлено: ${r.data.report.total_portions} порций`);
+                    } catch { alert('Ошибка'); }
+                  }}
+                  className="ml-auto flex items-center gap-1.5 text-[11px] font-bold text-[#c2ef4e] bg-[#c2ef4e]/10 hover:bg-[#c2ef4e]/20 border border-[#c2ef4e]/25 px-4 py-2 rounded-xl transition-all"
+                >
+                  📤 В столовую
+                </button>
               </div>
 
               {/* LIVE: Telegram Bot Feed */}
@@ -1460,66 +1418,55 @@ const [dbTasks, setDbTasks] = useState<any[]>([]);
                 ))}
               </div>
 
-              {/* Voice recording zone */}
-              <div className={`relative rounded-2xl p-10 border-2 transition-all duration-300 overflow-hidden ${isRecording ? 'bg-gradient-to-br from-purple-900 to-violet-900 border-purple-500/30 shadow-2xl' : 'bg-[#2a1f42] border-dashed border-white/15 hover:border-[#c2ef4e]/30'}`}>
-                {isRecording && (
-                  <>
-                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                      <div className="w-72 h-72 rounded-full border-2 border-white/10 animate-ping" style={{animationDuration:'1.8s'}} />
-                    </div>
-                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                      <div className="w-48 h-48 rounded-full border-2 border-white/20 animate-ping" style={{animationDuration:'1.1s'}} />
-                    </div>
-                  </>
-                )}
-                <div className="relative z-10 flex flex-col items-center text-center gap-6">
+              {/* Voice recording zone — compact toolbar */}
+              <div className={`rounded-2xl border transition-all duration-300 overflow-hidden ${isRecording ? 'bg-violet-900/40 border-violet-500/40' : 'bg-[#2a1f42] border-white/8'}`}>
+                <div className="flex items-center gap-4 px-5 py-4">
                   <button
                     onClick={handleMicClick}
                     disabled={isTranscribing}
-                    className={`w-24 h-24 rounded-full flex items-center justify-center shadow-2xl transition-all active:scale-90 ${
-                      isRecording ? 'bg-[#c2ef4e] text-[#1f1633] scale-110 animate-pulse' :
-                      isTranscribing ? 'bg-amber-100 text-amber-500 cursor-wait' :
-                      'bg-blue-600 text-white hover:bg-blue-500 hover:scale-105'
+                    className={`w-12 h-12 rounded-xl flex items-center justify-center shadow-lg transition-all active:scale-90 shrink-0 ${
+                      isRecording ? 'bg-[#c2ef4e] text-[#1f1633] animate-pulse' :
+                      isTranscribing ? 'bg-amber-500/20 text-amber-300 cursor-wait' :
+                      'bg-blue-600 text-white hover:bg-blue-500'
                     }`}
                   >
-                    {isTranscribing ? <Activity className="w-10 h-10 animate-spin" /> : isRecording ? <div className="w-8 h-8 bg-rose-500 rounded-md" /> : <Mic className="w-10 h-10" />}
+                    {isTranscribing ? <Activity className="w-5 h-5 animate-spin" /> : isRecording ? <div className="w-4 h-4 bg-rose-500 rounded-sm" /> : <Mic className="w-5 h-5" />}
                   </button>
-                  <div>
-                    <div className={`font-black text-xl ${isRecording ? 'text-white' : isTranscribing ? 'text-amber-600' : 'text-white'}`}>
-                      {isRecording ? '🔴 Записываю... (нажмите ■ чтобы остановить)' : isTranscribing ? '🧠 Whisper + GPT-4 анализируют...' : '🎤 Нажмите и говорите'}
+                  <div className="flex-1 min-w-0">
+                    <div className={`text-sm font-bold ${isRecording ? 'text-white' : isTranscribing ? 'text-amber-300' : 'text-white/70'}`}>
+                      {isRecording ? '🔴 Запись... (нажмите ■ чтобы остановить)' : isTranscribing ? '🧠 Обрабатываю через Whisper + GPT-4...' : 'Нажмите микрофон и продиктуйте поручение'}
                     </div>
-                    <div className={`text-sm mt-1.5 font-medium ${isRecording ? 'text-blue-100' : isTranscribing ? 'text-amber-400' : 'text-white/40'}`}>
-                      {isRecording ? 'Аудио записывается. Произнесите задачи чётко и нажмите стоп.' : isTranscribing ? 'Аудио отправлено на сервер для распознавания...' : 'Записываем аудио → Whisper транскрибирует → GPT-4 создаёт задачи'}
+                    <div className="text-xs text-white/30 mt-0.5">
+                      {isRecording ? 'Говорите чётко' : isTranscribing ? 'Создаю задачи автоматически...' : 'Голос → транскрипция → задача исполнителю'}
                     </div>
                   </div>
-                  {/* Whisper transcript result */}
-                  {isTranscribing && inputVal && (
-                    <div className="w-full bg-amber-50 border border-amber-200 rounded-2xl p-5 text-left">
-                      <div className="text-[10px] font-black text-amber-500 uppercase tracking-widest mb-2">Результат Whisper</div>
-                      <div className="text-white text-lg font-semibold leading-relaxed">{inputVal}</div>
-                    </div>
-                  )}
-                  {!isRecording && !isTranscribing && (
-                    <div className="space-y-3 w-full max-w-2xl">
-                      <div className="text-[10px] font-black text-white/40 uppercase tracking-widest text-center">Тестовые задания для демо (нажмите или произнесите)</div>
-                      <div className="flex flex-wrap gap-2 justify-center">
-                        {[
+                </div>
+                {isTranscribing && inputVal && (
+                  <div className="mx-5 mb-4 bg-amber-500/10 border border-amber-400/20 rounded-xl p-4">
+                    <div className="text-[10px] font-black text-amber-400 uppercase tracking-widest mb-1">Whisper распознал</div>
+                    <div className="text-white/80 text-sm font-semibold">{inputVal}</div>
+                  </div>
+                )}
+                {!isRecording && !isTranscribing && (
+                  <div className="px-5 pb-4">
+                    <div className="text-[10px] font-black text-white/25 uppercase tracking-widest mb-2">Примеры для демо:</div>
+                    <div className="flex flex-wrap gap-1.5">
+                      {[
                           'Мадина, закажи 20 бутылей воды на завтра для начальной школы',
                           'Гульнара, подготовь актовый зал к родительскому собранию в среду',
                           'Серик, почини проектор в кабинете 205, срочно',
                           'Петрова, проведите открытый урок по математике в 4Б классе в пятницу',
                           'Секретарю: распечатайте расписание на следующую неделю, 30 копий',
                           'Охране: проверьте все запасные выходы до конца дня',
-                        ].map((phrase, i) => (
-                          <button key={i} onClick={() => { pushMessage(phrase, true); }}
-                            className="text-xs font-bold bg-blue-50 text-blue-600 border border-blue-100 px-4 py-2 rounded-xl hover:bg-blue-100 transition active:scale-95">
-                            💬 {phrase}
-                          </button>
-                        ))}
-                      </div>
+                      ].map((phrase, i) => (
+                        <button key={i} onClick={() => pushMessage(phrase, true)}
+                          className="text-[11px] font-semibold text-blue-300/70 bg-blue-500/8 border border-blue-500/15 px-3 py-1.5 rounded-lg hover:bg-blue-500/15 hover:text-blue-300 transition active:scale-95 text-left">
+                          {phrase.slice(0, 38)}{phrase.length > 38 ? '…' : ''}
+                        </button>
+                      ))}
                     </div>
+                  </div>
                   )}
-                </div>
               </div>
 
               {/* --- WHATSAPP LIVE FEED (Split: Recurring vs Spontaneous) --- */}
@@ -1629,171 +1576,176 @@ const [dbTasks, setDbTasks] = useState<any[]>([]);
               )}
 
 
-              {/* --- 3-STAGE FEEDBACK SYSTEM --- */}
-              <div className="space-y-10">
-                {/* STAGE 1: REQUESTS (Non-accepted) */}
-                {dbTasks.filter(t => !t.is_accepted && !t.is_completed).length > 0 && (
-                  <div>
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse"></div>
-                      <span className="font-black text-white/60 uppercase tracking-widest text-[10px]">Стадия 1: Запросы ({dbTasks.filter(t => !t.is_accepted && !t.is_completed).length})</span>
+              {/* ── Канбан-доска ── */}
+              {dbTasks.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-16 bg-[#2a1f42] rounded-2xl border border-dashed border-white/10 text-center">
+                  <CheckCircle2 className="w-10 h-10 text-white/20 mb-3" />
+                  <div className="font-bold text-white/50">Задач пока нет — продиктуйте поручение</div>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {/* Колонка 1: Новые */}
+                  <div className="bg-[#2a1f42] rounded-2xl border border-white/8 overflow-hidden">
+                    <div className="flex items-center gap-2.5 px-4 py-3 border-b border-white/8">
+                      <div className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+                      <span className="text-xs font-black text-white/50 uppercase tracking-widest">Новые</span>
+                      <span className="ml-auto text-xs font-black bg-amber-400/15 text-amber-300 w-5 h-5 rounded-md flex items-center justify-center">
+                        {dbTasks.filter(t => !t.is_accepted && !t.is_completed).length}
+                      </span>
                     </div>
-                    <div className="space-y-3">
+                    <div className="p-3 space-y-2 min-h-[120px]">
                       {dbTasks.filter(t => !t.is_accepted && !t.is_completed).map((t, idx) => (
                         <TaskCard key={`req-${idx}`} task={t} idx={idx} stage="request" onMarkDone={markTaskDone} />
                       ))}
+                      {dbTasks.filter(t => !t.is_accepted && !t.is_completed).length === 0 && (
+                        <div className="text-center text-white/20 text-xs py-6">Нет новых задач</div>
+                      )}
                     </div>
                   </div>
-                )}
 
-                {/* STAGE 2: IN PROGRESS (Accepted) */}
-                {dbTasks.filter(t => t.is_accepted && !t.is_completed).length > 0 && (
-                  <div>
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="w-2.5 h-2.5 rounded-full bg-blue-500 animate-pulse"></div>
-                      <span className="font-black text-white/60 uppercase tracking-widest text-[10px]">Стадия 2: В обработке ({dbTasks.filter(t => t.is_accepted && !t.is_completed).length})</span>
+                  {/* Колонка 2: В работе */}
+                  <div className="bg-[#2a1f42] rounded-2xl border border-white/8 overflow-hidden">
+                    <div className="flex items-center gap-2.5 px-4 py-3 border-b border-white/8">
+                      <div className="w-2 h-2 rounded-full bg-blue-400 animate-pulse" />
+                      <span className="text-xs font-black text-white/50 uppercase tracking-widest">В работе</span>
+                      <span className="ml-auto text-xs font-black bg-blue-400/15 text-blue-300 w-5 h-5 rounded-md flex items-center justify-center">
+                        {dbTasks.filter(t => t.is_accepted && !t.is_completed).length}
+                      </span>
                     </div>
-                    <div className="space-y-3">
+                    <div className="p-3 space-y-2 min-h-[120px]">
                       {dbTasks.filter(t => t.is_accepted && !t.is_completed).map((t, idx) => (
                         <TaskCard key={`prog-${idx}`} task={t} idx={idx} stage="progress" onMarkDone={markTaskDone} />
                       ))}
+                      {dbTasks.filter(t => t.is_accepted && !t.is_completed).length === 0 && (
+                        <div className="text-center text-white/20 text-xs py-6">Нет активных задач</div>
+                      )}
                     </div>
                   </div>
-                )}
 
-                {/* STAGE 3: COMPLETED */}
-                {dbTasks.filter(t => t.is_completed).length > 0 && (
-                  <div>
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="w-2.5 h-2.5 rounded-full bg-emerald-500"></div>
-                      <span className="font-black text-white/60 uppercase tracking-widest text-[10px]">Стадия 3: Выполнено ({dbTasks.filter(t => t.is_completed).length})</span>
+                  {/* Колонка 3: Выполнено */}
+                  <div className="bg-[#2a1f42] rounded-2xl border border-white/8 overflow-hidden">
+                    <div className="flex items-center gap-2.5 px-4 py-3 border-b border-white/8">
+                      <div className="w-2 h-2 rounded-full bg-emerald-400" />
+                      <span className="text-xs font-black text-white/50 uppercase tracking-widest">Выполнено</span>
+                      <span className="ml-auto text-xs font-black bg-emerald-400/15 text-emerald-300 w-5 h-5 rounded-md flex items-center justify-center">
+                        {dbTasks.filter(t => t.is_completed).length}
+                      </span>
                     </div>
-                    <div className="space-y-3">
+                    <div className="p-3 space-y-2 min-h-[120px]">
                       {dbTasks.filter(t => t.is_completed).map((t, idx) => (
                         <TaskCard key={`done-${idx}`} task={t} idx={idx} stage="completed" onMarkDone={markTaskDone} />
                       ))}
+                      {dbTasks.filter(t => t.is_completed).length === 0 && (
+                        <div className="text-center text-white/20 text-xs py-6">Ещё ничего не выполнено</div>
+                      )}
                     </div>
                   </div>
-                )}
-
-                {dbTasks.length === 0 && (
-                  <div className="flex flex-col items-center justify-center py-16 bg-[#2a1f42] rounded-[2.5rem] border border-dashed border-white/10 text-center">
-                    <div className="w-16 h-16 bg-emerald-50 rounded-3xl flex items-center justify-center mb-4">
-                      <CheckCircle2 className="w-8 h-8 text-emerald-400" />
-                    </div>
-                    <div className="font-black text-xl text-white/90 mb-2">Задач пока нет</div>
-                    <div className="text-white/40 text-sm">Продиктуйте распоряжение через микрофон</div>
-                  </div>
-                )}
-              </div>
+                </div>
+              )}
 
 
             </div>
           )}
 
           {activeTab === 'schedule' && (
-            <div className="space-y-8 max-w-5xl mx-auto pb-20">
-              <div className="flex justify-between items-end mb-4">
-                <div>
-                   <h3 className="font-black text-4xl text-white tracking-tight">Замены и отсутствия</h3>
-                   <p className="text-white/60 mt-2 font-medium flex items-center">
-                     <Brain className="w-4 h-4 mr-2 text-blue-500" /> 
-                     Анализ на основе приказа №110 и расписания учителей
-                   </p>
-                </div>
-                {mockSchedule.some(s => s.status === 'pending') && (
-                  <button
-                    onClick={applyReplacements}
-                    className="bg-[#c2ef4e] hover:bg-[#a8d63a] text-[#1f1633] px-8 py-4 rounded-xl font-bold shadow-xl shadow-[#c2ef4e]/20 transition-all active:scale-95 flex items-center"
-                  >
-                    <Rocket className="w-5 h-5 mr-3" /> Утвердить все замены
-                  </button>
-                )}
-              </div>
+            <div className="max-w-6xl mx-auto pb-20">
+              <div className="flex flex-col lg:flex-row gap-6 items-start">
 
-              <div className="bg-[#2a1f42] rounded-[2rem] border border-white/10 p-6 md:p-8 shadow-xl space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                  <label className="block md:col-span-2">
-                    <div className="text-[10px] font-black text-white/40 uppercase tracking-widest mb-2">Учитель отсутствует</div>
-                    <input
-                      list="teacher-options"
-                      value={absenceTeacher}
-                      onChange={(e) => setAbsenceTeacher(e.target.value)}
-                      placeholder="Например, Болат"
-                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-white/30 focus:outline-none focus:border-[#c2ef4e]/40"
-                    />
-                    <datalist id="teacher-options">
-                      {teacherOptions.map((teacher) => (
-                        <option key={teacher.id} value={teacher.short_name || teacher.full_name}>
-                          {teacher.full_name}
-                        </option>
-                      ))}
-                    </datalist>
-                  </label>
-
-                  <label className="block">
-                    <div className="text-[10px] font-black text-white/40 uppercase tracking-widest mb-2">День</div>
-                    <select
-                      value={absenceDay}
-                      onChange={(e) => setAbsenceDay(e.target.value)}
-                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#c2ef4e]/40"
-                    >
-                      {["Понедельник", "Вторник", "Среда", "Четверг", "Пятница"].map((day) => (
-                        <option key={day} value={day} className="bg-[#1f1633]">{day}</option>
-                      ))}
-                    </select>
-                  </label>
-
-                  <label className="block">
-                    <div className="text-[10px] font-black text-white/40 uppercase tracking-widest mb-2">Причина</div>
-                    <input
-                      value={absenceReason}
-                      onChange={(e) => setAbsenceReason(e.target.value)}
-                      placeholder="Болезнь"
-                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-white/30 focus:outline-none focus:border-[#c2ef4e]/40"
-                    />
-                  </label>
-                </div>
-
-                <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                  <div className="text-sm text-white/50 leading-relaxed max-w-2xl">
-                    Сценарий для демо: учитель сообщает, что не придет, система ищет замену по предмету, нагрузке и доступности, затем обновляет расписание и статус уведомлений.
+                {/* ── Левая панель: форма ── */}
+                <div className="w-full lg:w-72 shrink-0 space-y-4 lg:sticky lg:top-4">
+                  <div>
+                    <h3 className="font-black text-2xl text-white tracking-tight">Замены и отсутствия</h3>
+                    <p className="text-white/40 mt-1 text-sm flex items-center gap-1.5">
+                      <Brain className="w-3.5 h-3.5 text-blue-400" />
+                      Приказ №110 · AI-подбор
+                    </p>
                   </div>
-                  <button
-                    onClick={handleProcessAbsence}
-                    disabled={isProcessingAbsence}
-                    className="bg-[#c2ef4e] hover:bg-[#a8d63a] disabled:opacity-50 text-[#1f1633] px-7 py-4 rounded-xl font-bold shadow-xl shadow-[#c2ef4e]/20 transition-all active:scale-95 flex items-center justify-center gap-3"
-                  >
-                    {isProcessingAbsence ? <Activity className="w-5 h-5 animate-spin" /> : <Rocket className="w-5 h-5" />}
-                    {isProcessingAbsence ? 'Назначаем замену...' : 'Запустить событие отсутствия'}
-                  </button>
+
+                  <div className="bg-[#2a1f42] rounded-2xl border border-white/8 p-5 space-y-4">
+                    <label className="block">
+                      <div className="text-[10px] font-black text-white/40 uppercase tracking-widest mb-2">Кто отсутствует</div>
+                      <input
+                        list="teacher-options"
+                        value={absenceTeacher}
+                        onChange={(e) => setAbsenceTeacher(e.target.value)}
+                        placeholder="Например, Болат"
+                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-white/30 focus:outline-none focus:border-[#c2ef4e]/40 text-sm"
+                      />
+                      <datalist id="teacher-options">
+                        {teacherOptions.map((teacher) => (
+                          <option key={teacher.id} value={teacher.short_name || teacher.full_name}>
+                            {teacher.full_name}
+                          </option>
+                        ))}
+                      </datalist>
+                    </label>
+
+                    <label className="block">
+                      <div className="text-[10px] font-black text-white/40 uppercase tracking-widest mb-2">День</div>
+                      <select
+                        value={absenceDay}
+                        onChange={(e) => setAbsenceDay(e.target.value)}
+                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#c2ef4e]/40 text-sm"
+                      >
+                        {["Понедельник", "Вторник", "Среда", "Четверг", "Пятница"].map((day) => (
+                          <option key={day} value={day} className="bg-[#1f1633]">{day}</option>
+                        ))}
+                      </select>
+                    </label>
+
+                    <label className="block">
+                      <div className="text-[10px] font-black text-white/40 uppercase tracking-widest mb-2">Причина</div>
+                      <input
+                        value={absenceReason}
+                        onChange={(e) => setAbsenceReason(e.target.value)}
+                        placeholder="Болезнь"
+                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-white/30 focus:outline-none focus:border-[#c2ef4e]/40 text-sm"
+                      />
+                    </label>
+
+                    <button
+                      onClick={handleProcessAbsence}
+                      disabled={isProcessingAbsence}
+                      className="w-full bg-[#c2ef4e] hover:bg-[#a8d63a] disabled:opacity-50 text-[#1f1633] py-3 rounded-xl font-bold shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2 text-sm"
+                    >
+                      {isProcessingAbsence ? <Activity className="w-4 h-4 animate-spin" /> : <Rocket className="w-4 h-4" />}
+                      {isProcessingAbsence ? 'Ищем замену...' : 'Найти замену'}
+                    </button>
+                  </div>
+
+                  {mockSchedule.some(s => s.status === 'pending') && (
+                    <button
+                      onClick={applyReplacements}
+                      className="w-full bg-white/8 hover:bg-white/12 text-white border border-white/10 py-3 rounded-xl font-bold transition-all active:scale-95 flex items-center justify-center gap-2 text-sm"
+                    >
+                      <Rocket className="w-4 h-4" /> Утвердить все замены
+                    </button>
+                  )}
+
+                  {absenceResult && (
+                    <div className="bg-[#2a1f42] rounded-2xl border border-white/8 p-4 space-y-3">
+                      <div className="text-[10px] font-black text-white/30 uppercase tracking-widest">Итог</div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs text-white/50">Учитель</span>
+                        <span className="text-sm font-bold text-white">{absenceResult.teacher_name}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs text-white/50">Найдено замен</span>
+                        <span className="text-lg font-black text-emerald-300">{absenceResult.substitutions_count}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs text-white/50">Без замены</span>
+                        <span className="text-lg font-black text-amber-300">{absenceResult.unresolved_count}</span>
+                      </div>
+                    </div>
+                  )}
                 </div>
-              </div>
+
+                {/* ── Правая часть: результаты ── */}
+                <div className="flex-1 space-y-6 min-w-0">
 
               {absenceResult && (
                 <>
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <div className="bg-[#2a1f42] rounded-2xl border border-white/10 p-5">
-                      <div className="text-[10px] font-black text-white/40 uppercase tracking-widest mb-2">Статус</div>
-                      <div className="text-xl font-black text-white">{absenceResult.status}</div>
-                      <div className="text-sm text-white/40 mt-1">{absenceResult.teacher_name} • {absenceResult.day}</div>
-                    </div>
-                    <div className="bg-[#2a1f42] rounded-2xl border border-emerald-400/20 p-5">
-                      <div className="text-[10px] font-black text-emerald-300 uppercase tracking-widest mb-2">Замены найдены</div>
-                      <div className="text-3xl font-black text-emerald-300">{absenceResult.substitutions_count}</div>
-                    </div>
-                    <div className="bg-[#2a1f42] rounded-2xl border border-amber-400/20 p-5">
-                      <div className="text-[10px] font-black text-amber-300 uppercase tracking-widest mb-2">Нужен ручной разбор</div>
-                      <div className="text-3xl font-black text-amber-300">{absenceResult.unresolved_count}</div>
-                    </div>
-                    <div className="bg-[#2a1f42] rounded-2xl border border-blue-400/20 p-5">
-                      <div className="text-[10px] font-black text-blue-300 uppercase tracking-widest mb-2">Live эффект</div>
-                      <div className="text-sm font-semibold text-white/70 leading-relaxed">
-                        Сетка ниже читает БД после замены. Можно сразу показать, что слот уже перестроен.
-                      </div>
-                    </div>
-                  </div>
-
                   {absenceResult.substitutions.length > 0 && (
                     <div className="grid gap-5">
                       {absenceResult.substitutions.map((item) => (
@@ -2020,7 +1972,10 @@ const [dbTasks, setDbTasks] = useState<any[]>([]);
                   </div>
                 ))}
               </div>}
-              
+
+              </div>{/* end right panel */}
+              </div>{/* end flex row */}
+
               <style dangerouslySetInnerHTML={{ __html: `
                 @keyframes pulse-subtle {
                   0%, 100% { opacity: 1; transform: scale(1); }
