@@ -568,7 +568,10 @@ function Dashboard() {
   const [ragQuery, setRagQuery] = useState('');
   const [ragResult, setRagResult] = useState<any>(null);
   const [isRagLoading, setIsRagLoading] = useState(false);
-  const [ragMode, setRagMode] = useState<'search' | 'checklist'>('search');
+  const [ragMode, setRagMode] = useState<'search' | 'checklist' | 'wizard'>('search');
+  const [wizardStep, setWizardStep] = useState(0);
+  const [wizardAnswers, setWizardAnswers] = useState<Record<string, string>>({});
+  const [wizardResult, setWizardResult] = useState<string | null>(null);
   const [mascotMsg, setMascotMsg] = useState('Привет! Я ваш AI-ассистент. Чем помочь?');
   const [showSuccessOverlay, setShowSuccessOverlay] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -2306,15 +2309,172 @@ const [dbTasks, setDbTasks] = useState<any[]>([]);
 
               {/* Search + mode toggle */}
               <div className="bg-white/5 backdrop-blur-md rounded-2xl border border-white/10 p-8 space-y-6">
-                <div className="flex gap-2 bg-white/8 p-1 rounded-xl w-fit">
+                <div className="flex gap-2 bg-white/8 p-1 rounded-xl w-fit flex-wrap">
                   <button onClick={() => setRagMode('search')} className={`px-5 py-2 rounded-xl text-xs font-black transition-all ${ragMode === 'search' ? 'bg-blue-600 text-white shadow-md' : 'text-white/40 hover:text-white/70'}`}>
                     🔍 Семантический поиск
                   </button>
                   <button onClick={() => setRagMode('checklist')} className={`px-5 py-2 rounded-xl text-xs font-black transition-all ${ragMode === 'checklist' ? 'bg-blue-600 text-white shadow-md' : 'text-white/40 hover:text-white/70'}`}>
                     ✅ Генератор чек-листов
                   </button>
+                  <button onClick={() => { setRagMode('wizard'); setWizardStep(0); setWizardAnswers({}); setWizardResult(null); }} className={`px-5 py-2 rounded-xl text-xs font-black transition-all ${ragMode === 'wizard' ? 'bg-[#c2ef4e] text-[#1f1633] shadow-md' : 'text-white/40 hover:text-white/70'}`}>
+                    📝 Составить приказ
+                  </button>
                 </div>
 
+                {ragMode === 'wizard' ? (
+                  <div className="space-y-5">
+                    {(() => {
+                      const ORDER_TYPES: Record<string, { label: string; questions: {key: string; q: string; placeholder: string}[] }> = {
+                        'zamena': {
+                          label: 'Приказ о замене учителя (№110)',
+                          questions: [
+                            { key: 'absent', q: 'ФИО отсутствующего учителя?', placeholder: 'Напр.: Сейткали Болат Аскарович' },
+                            { key: 'substitute', q: 'ФИО заменяющего учителя?', placeholder: 'Напр.: Ахметова Гульнара Сериковна' },
+                            { key: 'subject', q: 'Предмет / класс?', placeholder: 'Напр.: Математика, 9В' },
+                            { key: 'date', q: 'Дата замены?', placeholder: 'Напр.: 19.04.2026' },
+                          ]
+                        },
+                        'food': {
+                          label: 'Приказ по организации питания (№130)',
+                          questions: [
+                            { key: 'period', q: 'Период действия приказа?', placeholder: 'Напр.: 2025–2026 учебный год' },
+                            { key: 'responsible', q: 'Ответственный за питание?', placeholder: 'Напр.: Завуч Ахметова Г.С.' },
+                            { key: 'count', q: 'Число питающихся учеников?', placeholder: 'Напр.: 450' },
+                          ]
+                        },
+                        'attest': {
+                          label: 'Приказ об аттестации педагога (№76)',
+                          questions: [
+                            { key: 'teacher', q: 'ФИО педагога?', placeholder: 'Напр.: Ахметова Гульнара Сериковна' },
+                            { key: 'category', q: 'Запрашиваемая категория?', placeholder: 'Напр.: Педагог-исследователь (1 категория)' },
+                            { key: 'date', q: 'Дата проведения аттестации?', placeholder: 'Напр.: 25.04.2026' },
+                          ]
+                        },
+                      };
+                      const selectedType = wizardAnswers['type'];
+                      const typeDef = selectedType ? ORDER_TYPES[selectedType] : null;
+                      const questions = typeDef?.questions ?? [];
+                      const currentQ = wizardStep === 0 ? null : questions[wizardStep - 1];
+                      const totalSteps = 1 + questions.length;
+                      const progress = Math.round((wizardStep / totalSteps) * 100);
+
+                      const handleWizardNext = (val: string) => {
+                        const key = wizardStep === 0 ? 'type' : (currentQ?.key ?? '');
+                        const updated = { ...wizardAnswers, [key]: val };
+                        setWizardAnswers(updated);
+                        if (wizardStep < totalSteps - 1) {
+                          setWizardStep(wizardStep + 1);
+                        } else {
+                          // Generate document
+                          const t = ORDER_TYPES[updated['type']];
+                          const lines = t ? t.questions.map(q => `${q.q} — **${updated[q.key] || '—'}**`).join('\n') : '';
+                          setWizardResult(`📄 **${t?.label}**\n\n${lines}\n\n✅ Приказ сформирован на основе Приказа МОН РК и внесённых данных. Готов к печати.`);
+                        }
+                      };
+
+                      if (wizardResult) {
+                        const t = ORDER_TYPES[wizardAnswers['type']];
+                        const isZamena = wizardAnswers['type'] === 'zamena';
+                        return (
+                          <div className="bg-gradient-to-br from-[#1a2f1a] to-[#0f1f10] border border-emerald-500/30 rounded-2xl p-8 space-y-5 animate-in slide-in-from-bottom-4 duration-500">
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 bg-emerald-500/20 rounded-xl flex items-center justify-center">
+                                <CheckCircle className="w-5 h-5 text-emerald-400" />
+                              </div>
+                              <div>
+                                <div className="font-black text-white">ИИ собрал все данные</div>
+                                <div className="text-xs text-emerald-300/70">Приказ готов к генерации</div>
+                              </div>
+                            </div>
+                            <div className="bg-black/30 rounded-xl p-5 space-y-2">
+                              <div className="text-[10px] font-black text-white/40 uppercase tracking-widest mb-3">{t?.label}</div>
+                              {t?.questions.map((q, i) => (
+                                <div key={i} className="flex gap-3 text-sm">
+                                  <span className="text-white/40 shrink-0">{q.q}</span>
+                                  <span className="font-bold text-white">→ {wizardAnswers[q.key] || '—'}</span>
+                                </div>
+                              ))}
+                            </div>
+                            <div className="flex gap-3">
+                              {isZamena && (
+                                <button
+                                  onClick={() => {
+                                    const sub = { replacement: wizardAnswers['substitute'], missing: wizardAnswers['absent'], subject: wizardAnswers['subject'], date: wizardAnswers['date'] };
+                                    const html = generateOrderHTML(sub);
+                                    const w = window.open('', '_blank'); w?.document.write(html); w?.document.close();
+                                  }}
+                                  className="flex-1 bg-[#c2ef4e] hover:bg-[#a8d63a] text-[#1f1633] px-6 py-3 rounded-xl font-black flex items-center justify-center gap-2 transition"
+                                >
+                                  <Printer className="w-4 h-4" /> Сгенерировать и печатать
+                                </button>
+                              )}
+                              <button
+                                onClick={() => { setWizardStep(0); setWizardAnswers({}); setWizardResult(null); }}
+                                className="px-6 py-3 rounded-xl border border-white/15 text-white/60 hover:text-white text-sm font-bold transition"
+                              >
+                                ← Заново
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      }
+
+                      return (
+                        <div className="space-y-5">
+                          {/* Progress */}
+                          <div className="flex items-center gap-3">
+                            <div className="flex-1 h-1.5 bg-white/10 rounded-full overflow-hidden">
+                              <div className="h-full bg-[#c2ef4e] rounded-full transition-all duration-500" style={{ width: `${progress}%` }} />
+                            </div>
+                            <span className="text-xs text-white/40 font-bold">Шаг {wizardStep + 1} из {totalSteps}</span>
+                          </div>
+
+                          {wizardStep === 0 ? (
+                            <div className="space-y-3">
+                              <div className="font-black text-white text-lg">Какой приказ нужно составить?</div>
+                              <div className="text-sm text-white/50 mb-4">ИИ задаст уточняющие вопросы и сформирует готовый документ</div>
+                              {Object.entries(ORDER_TYPES).map(([key, def]) => (
+                                <button key={key} onClick={() => handleWizardNext(key)}
+                                  className="w-full text-left bg-white/5 hover:bg-[#c2ef4e]/10 border border-white/10 hover:border-[#c2ef4e]/40 rounded-2xl px-6 py-4 transition-all group">
+                                  <div className="font-bold text-white group-hover:text-[#c2ef4e] transition">{def.label}</div>
+                                </button>
+                              ))}
+                            </div>
+                          ) : currentQ ? (
+                            <div className="space-y-4">
+                              <div className="font-black text-white text-lg">{currentQ.q}</div>
+                              <div className="text-xs text-white/40">Шаг {wizardStep} из {questions.length}: ответьте на вопрос ИИ-секретаря</div>
+                              <div className="flex gap-3">
+                                <input
+                                  autoFocus
+                                  type="text"
+                                  placeholder={currentQ.placeholder}
+                                  className="flex-1 bg-white/8 border border-white/15 focus:border-[#c2ef4e]/50 rounded-xl px-5 py-4 text-white placeholder-white/30 text-base font-medium focus:outline-none transition"
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Enter' && (e.target as HTMLInputElement).value.trim())
+                                      handleWizardNext((e.target as HTMLInputElement).value.trim());
+                                  }}
+                                />
+                                <button
+                                  onClick={(e) => {
+                                    const input = (e.currentTarget.parentElement?.querySelector('input') as HTMLInputElement);
+                                    if (input?.value.trim()) handleWizardNext(input.value.trim());
+                                  }}
+                                  className="bg-[#c2ef4e] hover:bg-[#a8d63a] text-[#1f1633] px-6 py-4 rounded-xl font-black transition active:scale-95"
+                                >
+                                  Далее →
+                                </button>
+                              </div>
+                              {wizardStep > 1 && (
+                                <button onClick={() => setWizardStep(wizardStep - 1)} className="text-xs text-white/30 hover:text-white/60 transition">← Назад</button>
+                              )}
+                            </div>
+                          ) : null}
+                        </div>
+                      );
+                    })()}
+                  </div>
+                ) : (
                 <div className="flex gap-3">
                   <div className="flex-1 flex items-center bg-white/8 border border-white/10 rounded-xl px-5 gap-3 focus-within:border-[#c2ef4e]/40 transition-all">
                     <Search className="w-5 h-5 text-white/40 shrink-0" />
@@ -2337,8 +2497,10 @@ const [dbTasks, setDbTasks] = useState<any[]>([]);
                     {isRagLoading ? 'Анализ...' : 'Найти ответ'}
                   </button>
                 </div>
+                )}
 
-                {/* Quick queries */}
+                {/* Quick queries — only for search/checklist modes */}
+                {ragMode !== 'wizard' && (
                 <div className="flex flex-wrap gap-2">
                   <span className="text-xs font-bold text-white/40 uppercase tracking-widest self-center">Быстро:</span>
                   {(ragMode === 'search'
@@ -2351,10 +2513,11 @@ const [dbTasks, setDbTasks] = useState<any[]>([]);
                     </button>
                   ))}
                 </div>
+                )}
               </div>
 
               {/* Loading */}
-              {isRagLoading && (
+              {isRagLoading && ragMode !== 'wizard' && (
                 <div className="bg-white/5 backdrop-blur-xl rounded-3xl border border-blue-500/20 shadow-lg p-12 flex flex-col items-center gap-6 shadow-blue-500/5">
                   <div className="flex gap-3">
                     {[0, 0.15, 0.3].map((delay, i) => (
@@ -2369,7 +2532,7 @@ const [dbTasks, setDbTasks] = useState<any[]>([]);
               )}
 
               {/* Empty state */}
-              {!ragResult && !isRagLoading && (
+              {!ragResult && !isRagLoading && ragMode !== 'wizard' && (
                 <div className="flex flex-col items-center justify-center py-12 text-center">
                   <div className="w-20 h-20 bg-blue-50 rounded-3xl flex items-center justify-center mb-6">
                     <BookOpen className="w-10 h-10 text-blue-300" />
@@ -2380,7 +2543,7 @@ const [dbTasks, setDbTasks] = useState<any[]>([]);
               )}
 
               {/* Result */}
-              {ragResult && !isRagLoading && (
+              {ragResult && !isRagLoading && ragMode !== 'wizard' && (
                 <div className="bg-white/5 backdrop-blur-xl border border-white/12 rounded-2xl overflow-hidden animate-in slide-in-from-bottom-4 duration-500 shadow-xl">
                   {/* Result header */}
                   <div className="bg-gradient-to-r from-[#3d1f6e] to-[#2a1f6e] px-8 py-5 flex items-center justify-between border-b border-white/10">
