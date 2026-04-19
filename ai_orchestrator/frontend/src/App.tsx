@@ -68,7 +68,7 @@ function HomeScreen({ onStart }: { onStart: () => void }) {
           <div className="w-10 h-10 rounded-xl p-1.5">
             <BrandIcon className="w-full h-full" />
           </div>
-          <span className="text-xl font-bold tracking-tight text-white">AI Orchestrator</span>
+          <span className="text-xl font-bold tracking-tight text-white">Aqbobek AI</span>
         </div>
         <button
           onClick={onStart}
@@ -89,19 +89,19 @@ function HomeScreen({ onStart }: { onStart: () => void }) {
               </div>
               <div className="inline-flex items-center space-x-2 bg-blue-50/80 backdrop-blur-sm border border-blue-100 px-4 py-2 rounded-full relative z-10 shadow-sm">
                 <Sparkles className="w-4 h-4 text-blue-600" />
-                <span className="text-xs font-bold uppercase tracking-widest text-blue-600">AI School Orchestrator v2.0</span>
+                <span className="text-xs font-bold uppercase tracking-widest text-blue-600">Aqbobek AI · Платформа для директора</span>
               </div>
             </div>
             
             <h1 className="text-6xl font-black leading-[1.1] tracking-tight text-white">
-              Цифровой разум <br />
+              Управляйте школой<br />
               <span className="text-[#c2ef4e]">
-                вашей школы
+                голосом и AI
               </span>
             </h1>
-            
+
             <p className="text-xl text-white/60 font-medium leading-relaxed max-w-xl">
-              Автоматизация WhatsApp-отчетов, умное планирование замен и мгновенный поиск по нормативным актам. Освободите время для самого важного — образования.
+              Голосовые поручения, автоматический подбор замен, свод питания из чатов и правовой советник на базе приказов МОН РК. Всё в одной системе.
             </p>
 
             <div className="flex items-center space-x-6">
@@ -118,7 +118,7 @@ function HomeScreen({ onStart }: { onStart: () => void }) {
                   <div key={i} className="w-12 h-12 rounded-full border-4 border-white bg-slate-200 flex items-center justify-center overflow-hidden" />
                 ))}
                 <div className="pl-6 text-sm font-bold text-white/40">
-                  <span className="text-white">500+</span> школьных <br /> директоров уже с нами
+                  <span className="text-white">50+</span> школ <br /> уже используют
                 </div>
               </div>
             </div>
@@ -138,7 +138,7 @@ function HomeScreen({ onStart }: { onStart: () => void }) {
                     </div>
                     <div>
                       <div className="text-xs font-black uppercase tracking-[0.2em] text-white/40 mb-1">Voice Input</div>
-                      <div className="font-extrabold text-xl text-white">«Замените 5А на 2 урок...»</div>
+                      <div className="font-extrabold text-xl text-white">«Гульнара, подготовь актовый зал...»</div>
                     </div>
                   </div>
                   <div className="w-10 h-10 rounded-full border-2 border-blue-200 flex items-center justify-center text-blue-500">
@@ -155,7 +155,7 @@ function HomeScreen({ onStart }: { onStart: () => void }) {
                     <span className="text-[10px] font-bold text-white/30 uppercase">Just now</span>
                   </div>
                   <p className="text-base text-white/70 font-medium leading-relaxed">
-                    Проанализировано 12 сообщений из WhatsApp. Найдено 3 инцидента. Сформирована заявка для завхоза.
+                    Обработано 8 чатов из Telegram. Создано 2 поручения. Подобрана замена для Болата автоматически.
                   </p>
                 </div>
 
@@ -169,7 +169,7 @@ function HomeScreen({ onStart }: { onStart: () => void }) {
                   <div className="p-6 bg-white/5 rounded-xl border border-white/10 group-hover:bg-white/8 transition-colors">
                     <Activity className="w-8 h-8 text-blue-500 mb-3" />
                     <div className="text-[10px] font-black uppercase text-white/40 tracking-widest mb-1">Efficiency</div>
-                    <div className="font-bold text-lg text-white">+24% Время</div>
+                    <div className="font-bold text-lg text-white">−70% Рутины</div>
                   </div>
                 </div>
               </div>
@@ -221,7 +221,7 @@ function AuthScreen({ onLogin }: { onLogin: (role: string) => void }) {
             <BrandIcon className="w-full h-full" />
           </div>
           <h2 className="text-2xl font-bold tracking-tight text-white">Вход в систему</h2>
-          <p className="text-white/40 text-sm mt-1">AI Orchestrator · Aqbobek School</p>
+          <p className="text-white/40 text-sm mt-1">Aqbobek AI · Система управления школой</p>
         </div>
 
         <div className="flex bg-white/8 p-1 rounded-2xl mb-6">
@@ -1173,20 +1173,32 @@ const [dbTasks, setDbTasks] = useState<any[]>([]);
           <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-3 p-2">
             <BrandIcon className="w-full h-full" />
           </div>
-          <div className="font-bold text-base text-white tracking-tight">AI Orchestrator</div>
-          <div className="text-[10px] text-white/30 font-medium mt-0.5 uppercase tracking-widest">Aqbobek School</div>
+          <div className="font-bold text-base text-white tracking-tight">Aqbobek AI</div>
+          <div className="text-[10px] text-white/30 font-medium mt-0.5 uppercase tracking-widest">Цифровой директор</div>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-3 space-y-0.5 w-full">
-          <MenuButton title="Рабочие чаты и ГС" desc="Анализ LLM парсером" icon={<Users />} active={activeTab === 'chat'} onClick={() => setActiveTab('chat')} />
-          <MenuButton title="Делегат (Voice-to-Task)" desc="Реальная База Данных" icon={<CheckCircle2 />} active={activeTab === 'tasks'} onClick={() => setActiveTab('tasks')} />
-          <MenuButton title="Smart Substitution" desc="Анализ LLM: Замены" icon={<Calendar />} active={activeTab === 'schedule'} onClick={() => setActiveTab('schedule')} />
-          <MenuButton title="Правовой RAG" desc="Проверка по приказам" icon={<BookOpen />} active={activeTab === 'rag'} onClick={() => setActiveTab('rag')} />
-          <MenuButton title="Умное Расписание" desc="Генератор сетки с нуля" icon={<Zap />} active={activeTab === 'timetable'} onClick={() => setActiveTab('timetable')} />
-          <MenuButton title="Система Лент" desc="Кросс-классовые группы" icon={<Layers />} active={activeTab === 'lenta'} onClick={() => setActiveTab('lenta')} />
-          <MenuButton title="Тепловая Карта" desc="Нагрузка учителей" icon={<ThermometerSun />} active={activeTab === 'heatmap'} onClick={() => setActiveTab('heatmap')} />
-          <MenuButton title="Расписание сотрудников" desc="От завхоза до директора" icon={<PersonStanding />} active={activeTab === 'staffsched'} onClick={() => setActiveTab('staffsched')} />
-          <MenuButton title="Аналитика" desc="Тренды и статистика" icon={<BarChart3 />} active={activeTab === 'analytics'} onClick={() => setActiveTab('analytics')} />
+        <div className="flex-1 overflow-y-auto py-4 px-3 w-full">
+          <div className="text-[10px] font-black text-white/20 uppercase tracking-widest px-2 mb-2">Мониторинг</div>
+          <div className="space-y-0.5 mb-4">
+            <MenuButton title="Чаты и отчёты" desc="LLM-парсинг сообщений" icon={<Users />} active={activeTab === 'chat'} onClick={() => setActiveTab('chat')} />
+            <MenuButton title="Поручения" desc="Голос → задача автоматически" icon={<CheckCircle2 />} active={activeTab === 'tasks'} onClick={() => setActiveTab('tasks')} />
+          </div>
+          <div className="text-[10px] font-black text-white/20 uppercase tracking-widest px-2 mb-2">Кадры</div>
+          <div className="space-y-0.5 mb-4">
+            <MenuButton title="Управление заменами" desc="AI-подбор по нагрузке" icon={<Calendar />} active={activeTab === 'schedule'} onClick={() => setActiveTab('schedule')} />
+            <MenuButton title="Сетка расписания" desc="Генератор с нуля" icon={<Zap />} active={activeTab === 'timetable'} onClick={() => setActiveTab('timetable')} />
+            <MenuButton title="Языковые группы" desc="Лента по уровням" icon={<Layers />} active={activeTab === 'lenta'} onClick={() => setActiveTab('lenta')} />
+            <MenuButton title="График сотрудников" desc="Персональное расписание" icon={<PersonStanding />} active={activeTab === 'staffsched'} onClick={() => setActiveTab('staffsched')} />
+          </div>
+          <div className="text-[10px] font-black text-white/20 uppercase tracking-widest px-2 mb-2">Аналитика</div>
+          <div className="space-y-0.5 mb-4">
+            <MenuButton title="Карта нагрузки" desc="Визуализация по учителям" icon={<ThermometerSun />} active={activeTab === 'heatmap'} onClick={() => setActiveTab('heatmap')} />
+            <MenuButton title="Показатели" desc="Тренды и статистика" icon={<BarChart3 />} active={activeTab === 'analytics'} onClick={() => setActiveTab('analytics')} />
+          </div>
+          <div className="text-[10px] font-black text-white/20 uppercase tracking-widest px-2 mb-2">Нормативы</div>
+          <div className="space-y-0.5">
+            <MenuButton title="База знаний" desc="Приказы МОН №76, №110, №130" icon={<BookOpen />} active={activeTab === 'rag'} onClick={() => setActiveTab('rag')} />
+          </div>
         </div>
         <div className="p-4 border-t border-white/8 w-full">
           <button onClick={() => { localStorage.removeItem('auth_token'); window.location.reload(); }} className="w-full text-white/30 hover:text-rose-400 hover:bg-rose-500/10 rounded-xl transition font-medium text-sm p-3 text-center">Выйти из системы</button>
@@ -1194,24 +1206,37 @@ const [dbTasks, setDbTasks] = useState<any[]>([]);
       </div>
 
       <div className="flex-1 flex flex-col relative z-0 min-w-0">
-        <div className="px-4 md:px-8 py-4 flex items-center justify-between z-10 sticky top-0 bg-[#1f1633]/90 backdrop-blur-md border-b border-white/8">
-          <div className="flex items-center space-x-4">
+        <div className="px-4 md:px-8 py-3.5 flex items-center justify-between z-10 sticky top-0 bg-[#1f1633]/95 backdrop-blur-md border-b border-white/8">
+          <div className="flex items-center gap-3">
             <button
               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-              className="p-2.5 rounded-xl bg-white/10 border border-white/10 hover:bg-white/15 transition active:scale-95 text-white md:hidden"
+              className="p-2 rounded-lg bg-white/8 border border-white/10 hover:bg-white/14 transition active:scale-95 text-white md:hidden"
             >
-              <Menu size={22} />
+              <Menu size={20} />
             </button>
-            <h2 className="text-xl md:text-2xl font-bold text-white tracking-tight">AI Orchestrator</h2>
+            <div>
+              <div className="text-[10px] text-white/25 font-semibold uppercase tracking-widest hidden md:block">Aqbobek AI</div>
+              <h2 className="text-lg md:text-xl font-bold text-white tracking-tight leading-tight">
+                {activeTab === 'chat' && 'Чаты и отчёты'}
+                {activeTab === 'tasks' && 'Поручения'}
+                {activeTab === 'schedule' && 'Управление заменами'}
+                {activeTab === 'rag' && 'База знаний'}
+                {activeTab === 'timetable' && 'Сетка расписания'}
+                {activeTab === 'lenta' && 'Языковые группы'}
+                {activeTab === 'heatmap' && 'Карта нагрузки'}
+                {activeTab === 'staffsched' && 'График сотрудников'}
+                {activeTab === 'analytics' && 'Показатели'}
+              </h2>
+            </div>
           </div>
-          <div className="flex items-center gap-3">
-            <div className="flex items-center bg-white/8 px-4 py-2 rounded-xl border border-white/10 gap-2.5">
-              <span className="relative flex h-2.5 w-2.5">
+          <div className="flex items-center gap-2.5">
+            <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg border border-white/10 bg-white/5">
+              <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#c2ef4e] opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#c2ef4e]"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-[#c2ef4e]"></span>
               </span>
-              <div className="text-xs font-bold uppercase tracking-widest text-white/60">
-                {botFeed.length > 0 ? `LIVE: ${botFeed.length} сообщений` : 'Sync: Telegram / SQLite'}
+              <div className="text-[11px] font-bold uppercase tracking-widest text-white/50">
+                {botFeed.length > 0 ? `${botFeed.length} сообщений` : 'Online'}
               </div>
             </div>
             <button
@@ -1407,10 +1432,10 @@ const [dbTasks, setDbTasks] = useState<any[]>([]);
               {/* Header */}
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="font-black text-4xl text-white tracking-tight">Делегат</h3>
+                  <h3 className="font-black text-4xl text-white tracking-tight">Поручения</h3>
                   <p className="text-white/60 mt-1 font-medium flex items-center gap-2">
                     <Mic className="w-4 h-4 text-blue-500" />
-                    Voice-to-Task — голос директора превращается в задачи автоматически
+                    Голосовая команда → задача исполнителю автоматически
                   </p>
                 </div>
                 <button onClick={loadTasks} className="flex items-center gap-2 text-sm font-medium bg-white/8 text-white/70 px-5 py-3 border border-white/10 rounded-xl hover:bg-white/12 transition active:scale-95">
@@ -1670,7 +1695,7 @@ const [dbTasks, setDbTasks] = useState<any[]>([]);
             <div className="space-y-8 max-w-5xl mx-auto pb-20">
               <div className="flex justify-between items-end mb-4">
                 <div>
-                   <h3 className="font-black text-4xl text-white tracking-tight">AI Smart Substitution</h3>
+                   <h3 className="font-black text-4xl text-white tracking-tight">Замены и отсутствия</h3>
                    <p className="text-white/60 mt-2 font-medium flex items-center">
                      <Brain className="w-4 h-4 mr-2 text-blue-500" /> 
                      Анализ на основе приказа №110 и расписания учителей
@@ -2013,10 +2038,10 @@ const [dbTasks, setDbTasks] = useState<any[]>([]);
 
               {/* Header */}
               <div>
-                <h3 className="font-black text-4xl text-white tracking-tight">Правовой Советник</h3>
+                <h3 className="font-black text-4xl text-white tracking-tight">База знаний</h3>
                 <p className="text-white/60 mt-1 font-medium flex items-center gap-2">
                   <Shield className="w-4 h-4 text-blue-500" />
-                  RAG — семантический поиск по приказам МОН РК №76, №110, №130
+                  Семантический поиск по нормативным актам МОН РК: Приказы №76, №110, №130
                 </p>
               </div>
 
@@ -2235,7 +2260,7 @@ const [dbTasks, setDbTasks] = useState<any[]>([]);
                 <div className="absolute top-0 right-0 w-64 h-64 bg-white opacity-5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4"></div>
                 <div className="relative z-10 flex justify-between items-center">
                   <div>
-                    <h2 className="text-4xl font-black tracking-tight mb-2">Генератор Расписания</h2>
+                    <h2 className="text-4xl font-black tracking-tight mb-2">Сетка расписания</h2>
                     <p className="text-blue-100/80 font-medium text-lg max-w-lg">
                       Умный алгоритм пересобирает расписание с нуля с учётом всех коллизий: учителя и кабинеты не пересекаются.
                     </p>
@@ -2336,7 +2361,7 @@ const [dbTasks, setDbTasks] = useState<any[]>([]);
           {activeTab === 'analytics' && (
             <div className="max-w-5xl mx-auto space-y-8 pb-20">
               <div>
-                <h3 className="font-black text-4xl text-white tracking-tight">Аналитика</h3>
+                <h3 className="font-black text-4xl text-white tracking-tight">Показатели школы</h3>
                 <p className="text-white/60 mt-1 font-medium flex items-center gap-2">
                   <TrendingUp className="w-4 h-4 text-violet-500" />
                   Недельные тренды и статистика школы
@@ -2775,11 +2800,14 @@ function GenerateReportButton() {
 
 function MenuButton({title, desc, icon, active, onClick}: any) {
   return (
-    <div onClick={onClick} className={`px-3 py-2.5 rounded-xl cursor-pointer transition-all duration-200 flex items-center group ${active ? 'bg-[#c2ef4e]/15 border border-[#c2ef4e]/30' : 'hover:bg-white/6 border border-transparent'}`}>
-      <div className={`p-2 rounded-lg mr-3 shrink-0 ${active ? 'bg-[#c2ef4e]/20 text-[#c2ef4e]' : 'bg-white/8 text-white/40 group-hover:text-white/60'}`}>{icon}</div>
-      <div className="min-w-0">
-        <h3 className={`font-semibold text-sm truncate ${active ? 'text-[#c2ef4e]' : 'text-white/70 group-hover:text-white/90'}`}>{title}</h3>
-        <p className={`text-[11px] mt-0.5 truncate ${active ? 'text-[#c2ef4e]/60' : 'text-white/30'}`}>{desc}</p>
+    <div onClick={onClick} className={`pl-2 pr-3 py-2.5 rounded-lg cursor-pointer transition-all duration-200 flex items-center gap-3 group relative ${active ? 'bg-[#c2ef4e]/10' : 'hover:bg-white/5'}`}>
+      {active && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-full bg-[#c2ef4e]" />}
+      <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-all ${active ? 'bg-[#c2ef4e]/20 text-[#c2ef4e]' : 'bg-white/6 text-white/35 group-hover:text-white/60 group-hover:bg-white/10'}`}>
+        <div className="w-4 h-4">{icon}</div>
+      </div>
+      <div className="min-w-0 flex-1">
+        <h3 className={`font-semibold text-[13px] truncate leading-tight ${active ? 'text-[#c2ef4e]' : 'text-white/65 group-hover:text-white/90'}`}>{title}</h3>
+        <p className={`text-[11px] mt-0.5 truncate ${active ? 'text-[#c2ef4e]/50' : 'text-white/25'}`}>{desc}</p>
       </div>
     </div>
   );
