@@ -227,6 +227,11 @@ def whatsapp_webhook(req: WhatsAppWebhookReq):
     _ensure_table()
     parsed = parse_with_llm(req.text, sender=req.sender)
 
+    # Фильтр: нерелевантные сообщения не попадают на дашборд
+    if not parsed.school_relevant and parsed.type == "other" and not parsed.is_acceptance:
+        print(f"[Filter] Нерелевантное сообщение от {req.sender}: {req.text[:60]}")
+        return {"status": "filtered", "reason": "not_school_relevant"}
+
     raw_type = parsed.type
     stored_type = "other" if raw_type == "task" or parsed.is_acceptance else raw_type
     task_subtype = parsed.recurrence or _detect_recurrence(req.text)
@@ -240,6 +245,9 @@ def whatsapp_webhook(req: WhatsAppWebhookReq):
     payload_json = json.dumps(parsed.model_dump(), ensure_ascii=False)
     review_status = "needs_review" if parsed.requires_review else "approved"
 
+    # Показываем только суть — clean_text если есть, иначе summary, НЕ сырой текст
+    display_text = parsed.clean_text or parsed.summary or req.text[:120]
+
     try:
         conn = _get_conn()
         conn.execute(
@@ -249,7 +257,7 @@ def whatsapp_webhook(req: WhatsAppWebhookReq):
             (
                 req.chatId,
                 req.sender,
-                f"[WA] {req.text}",
+                display_text,
                 stored_type,
                 summary,
                 food_class,

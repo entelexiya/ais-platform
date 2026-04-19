@@ -285,6 +285,8 @@ class ParsedMessage(BaseModel):
     review_reason: Optional[str] = None
     analysis_provider: Optional[str] = None
     detected_language: Optional[str] = None
+    school_relevant: bool = True
+    clean_text: Optional[str] = None
 
 
 def _normalized_text(value: str) -> str:
@@ -725,6 +727,8 @@ recurrence: "spontaneous" или "recurring".
 6. confidence должен быть числом от 0 до 1.
 7. summary должен быть коротким, понятным директору.
 8. Если данных нет, ставь null или [].
+9. ВАЖНО: school_relevant=false если сообщение вообще не касается школы, учебного процесса, сотрудников или инфраструктуры школы (личные разговоры, погода, посторонние темы). school_relevant=true для всего что касается: учителей, учеников, питания, кабинетов, оборудования, расписания, инцидентов в школе.
+10. clean_text — ТОЛЬКО суть, относящаяся к школе. Убери личный контекст ("шел домой, видел..."), оставь только факт ("сломана скамейка у входа"). Если всё сообщение нерелевантно — clean_text=null.
 
 Структура JSON:
 {{
@@ -747,6 +751,8 @@ recurrence: "spontaneous" или "recurring".
   "task_title": null,
   "requires_substitution": false,
   "is_acceptance": false,
+  "school_relevant": true,
+  "clean_text": null,
   "requires_review": false,
   "review_reason": null,
   "analysis_provider": null,
